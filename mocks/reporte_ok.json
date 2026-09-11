@@ -1,0 +1,20 @@
+{
+  "version": "1.1",
+  "generado_por": "ia",
+  "calificacion_general": "bueno",
+  "titular": "Tu wifi está funcionando bien en todo el departamento",
+  "resumen": "Medimos 5 ambientes y en todos llega buena velocidad. Junto al router recibes 187 Mbps de los 200 de tu plan, y el punto más lejano (el baño) todavía recibe 96 Mbps, suficiente para ver videos en alta calidad y hacer videollamadas al mismo tiempo. No vemos ningún problema que reportar.",
+  "cuartos": [
+    { "cuarto": "Sala (junto al router)", "estado": "bueno", "velocidad_vs_plan_pct": 94, "explicacion": "Aquí llega casi toda la velocidad de tu plan. Esta es la referencia con la que comparamos el resto de la casa." },
+    { "cuarto": "Cocina", "estado": "bueno", "velocidad_vs_plan_pct": 77, "explicacion": "Buena señal. La pequeña caída frente a la sala es normal por la distancia." },
+    { "cuarto": "Dormitorio 1", "estado": "bueno", "velocidad_vs_plan_pct": 66, "explicacion": "Velocidad de sobra para streaming, juegos y trabajo." },
+    { "cuarto": "Dormitorio 2", "estado": "bueno", "velocidad_vs_plan_pct": 59, "explicacion": "Señal estable, sin cortes ni demoras." },
+    { "cuarto": "Baño", "estado": "bueno", "velocidad_vs_plan_pct": 48, "explicacion": "Es el punto más lejano del router y aun así recibe la mitad del plan, que es bastante." }
+  ],
+  "causa_probable": "No hay una falla. La caída gradual de velocidad a medida que te alejas del router es el comportamiento normal del wifi.",
+  "recomendaciones": [
+    { "titulo": "No necesitas hacer nada", "detalle": "Tu instalación está bien. Si en algún momento notas lentitud, vuelve a correr esta medición para comparar contra estos resultados.", "responsable": "cliente" },
+    { "titulo": "Usa la banda de 5 GHz si tu equipo la ofrece", "detalle": "En los ambientes cercanos al router te va a dar aún más velocidad.", "responsable": "cliente" }
+  ],
+  "requiere_visita_tecnica": false
+}

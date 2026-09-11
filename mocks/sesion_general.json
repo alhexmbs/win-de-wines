@@ -1,0 +1,13 @@
+{
+  "version": "1.1",
+  "sesion_id": "mock-general",
+  "inicio": "2026-09-11T11:30:00.000Z",
+  "contexto": { "plan_mbps": 200, "tipo_vivienda": "casa", "pisos": 1 },
+  "dispositivo": { "conexion": "wifi", "navegador": "Safari 19 / iOS" },
+  "mediciones": [
+    { "cuarto": "Sala (junto al router)", "es_referencia": true,  "timestamp": "2026-09-11T11:30:30.000Z", "descarga_mbps": 21.7, "latencia_ms": 64, "jitter_ms": 22, "perdida_pct": 1.8, "muestras": 5 },
+    { "cuarto": "Cocina",                 "es_referencia": false, "timestamp": "2026-09-11T11:32:10.000Z", "descarga_mbps": 18.9, "latencia_ms": 71, "jitter_ms": 25, "perdida_pct": 2.0, "muestras": 5 },
+    { "cuarto": "Dormitorio 1",           "es_referencia": false, "timestamp": "2026-09-11T11:33:50.000Z", "descarga_mbps": 16.4, "latencia_ms": 78, "jitter_ms": 27, "perdida_pct": 2.4, "muestras": 5 },
+    { "cuarto": "Dormitorio 2",           "es_referencia": false, "timestamp": "2026-09-11T11:35:25.000Z", "descarga_mbps": 15.1, "latencia_ms": 83, "jitter_ms": 29, "perdida_pct": 2.9, "muestras": 5 }
+  ]
+}

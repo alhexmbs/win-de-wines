@@ -1,0 +1,15 @@
+{
+  "version": "1.1",
+  "sesion_id": "mock-cobertura",
+  "inicio": "2026-09-11T10:02:00.000Z",
+  "contexto": { "plan_mbps": 200, "tipo_vivienda": "casa", "pisos": 2 },
+  "dispositivo": { "conexion": "wifi", "navegador": "Chrome 141 / Android" },
+  "mediciones": [
+    { "cuarto": "Sala (junto al router)", "es_referencia": true,  "timestamp": "2026-09-11T10:02:30.000Z", "descarga_mbps": 192.1, "latencia_ms": 10, "jitter_ms": 2,  "perdida_pct": 0,   "muestras": 5 },
+    { "cuarto": "Comedor",                "es_referencia": false, "timestamp": "2026-09-11T10:04:00.000Z", "descarga_mbps": 141.6, "latencia_ms": 15, "jitter_ms": 4,  "perdida_pct": 0,   "muestras": 5 },
+    { "cuarto": "Cocina",                 "es_referencia": false, "timestamp": "2026-09-11T10:05:30.000Z", "descarga_mbps": 62.3,  "latencia_ms": 28, "jitter_ms": 9,  "perdida_pct": 0.4, "muestras": 5 },
+    { "cuarto": "Dormitorio 2do piso",    "es_referencia": false, "timestamp": "2026-09-11T10:07:15.000Z", "descarga_mbps": 7.9,   "latencia_ms": 88, "jitter_ms": 31, "perdida_pct": 2.1, "muestras": 5 },
+    { "cuarto": "Estudio 2do piso",       "es_referencia": false, "timestamp": "2026-09-11T10:09:00.000Z", "descarga_mbps": 3.1,   "latencia_ms": 142,"jitter_ms": 48, "perdida_pct": 5.6, "muestras": 5 },
+    { "cuarto": "Patio",                  "es_referencia": false, "timestamp": "2026-09-11T10:10:40.000Z", "descarga_mbps": 0,     "latencia_ms": 0,  "jitter_ms": 0,  "muestras": 2, "error": "sin_señal" }
+  ]
+}

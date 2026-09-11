@@ -1,0 +1,20 @@
+{
+  "version": "1.1",
+  "generado_por": "ia",
+  "calificacion_general": "malo",
+  "titular": "El problema no es el alcance del wifi: llega poca velocidad a toda la casa",
+  "resumen": "Medimos 4 ambientes, incluido uno junto al router, y en todos la velocidad es baja: entre 15 y 22 Mbps de los 200 Mbps de tu plan. Incluso parado al lado del router solo llegan 21.7 Mbps, es decir el 11% de lo contratado. Cuando el punto de referencia también falla, el problema está en la conexión o en el equipo, no en la distancia dentro de la casa.",
+  "cuartos": [
+    { "cuarto": "Sala (junto al router)", "estado": "malo", "velocidad_vs_plan_pct": 11, "explicacion": "Este es el dato clave: pegado al router deberías recibir casi los 200 Mbps y solo llegan 21.7, con 64 ms de demora y pérdida de paquetes." },
+    { "cuarto": "Cocina", "estado": "malo", "velocidad_vs_plan_pct": 9, "explicacion": "Mismo nivel que la sala. La caída no viene de la distancia." },
+    { "cuarto": "Dormitorio 1", "estado": "malo", "velocidad_vs_plan_pct": 8, "explicacion": "Velocidad baja y respuestas lentas en todo momento." },
+    { "cuarto": "Dormitorio 2", "estado": "malo", "velocidad_vs_plan_pct": 7, "explicacion": "El más lejano, pero apenas peor que el resto: confirma que la falla es general." }
+  ],
+  "causa_probable": "Como la referencia junto al router también sale mal, lo más probable es una falla en la conexión que entra a tu casa o en el equipo (router con problema, conector de fibra flojo, o una avería en la zona). No es algo que se arregle moviendo el router.",
+  "recomendaciones": [
+    { "titulo": "Reporta esto a WIN para revisión técnica", "detalle": "Envía este reporte con un clic. Incluye las 4 mediciones y sirve como evidencia de que el problema es general, no de cobertura.", "responsable": "win" },
+    { "titulo": "Antes de la visita, reinicia el router", "detalle": "Desconéctalo de la corriente 30 segundos y vuelve a conectarlo. Espera 3 minutos y repite esta medición. Si sigue igual, confirma la visita.", "responsable": "cliente" },
+    { "titulo": "Revisa que el cable de fibra esté bien puesto", "detalle": "El cable delgado que entra al router debe estar firme y sin dobleces fuertes. Un doblez marcado puede bajar mucho la velocidad.", "responsable": "cliente" }
+  ],
+  "requiere_visita_tecnica": true
+}

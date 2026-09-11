@@ -1,0 +1,136 @@
+/**
+ * contrato.ts — v1.1
+ *
+ * Regla 1: cada campo tiene UN solo dueño (anotado abajo).
+ * Regla 2: el contrato SOLO CRECE. Durante el día 1 no se renombra ni se borra
+ *          un campo; lo nuevo entra como opcional y se avisa en el grupo.
+ */
+
+export const VERSION_CONTRATO = '1.1'
+
+/* ───────────── A — src/medicion/ ───────────── */
+
+/** Detectado por A con las APIs del navegador (navigator.connection, userAgent). */
+export interface Dispositivo {
+  conexion: 'wifi' | 'celular' | 'desconocida'
+  navegador: string
+}
+
+/** Una medición = un cuarto. A produce una por cada parada de la caminata. */
+export interface Medicion {
+  cuarto: string
+  /** true = medición tomada junto al router (línea base de la casa). */
+  es_referencia: boolean
+  /** ISO 8601. */
+  timestamp: string
+  descarga_mbps: number
+  latencia_ms: number
+  jitter_ms: number
+  perdida_pct?: number
+  muestras?: number
+  /** Si el test falló en ese cuarto (sin señal, timeout, etc.). */
+  error?: string
+}
+
+/** Lo único que A entrega al terminar la caminata. */
+export interface ResultadoMedicion {
+  dispositivo: Dispositivo
+  mediciones: Medicion[]
+}
+
+/* ───────────── C — onboarding + armado ───────────── */
+
+/** Lo que el cliente responde en el onboarding. WIN no nos da estos datos. */
+export interface Contexto {
+  plan_mbps: number | null
+  tipo_vivienda: 'casa' | 'departamento'
+  pisos: number
+}
+
+/** C junta lo suyo con el ResultadoMedicion de A. Esto es lo que consume B. */
+export interface Sesion {
+  version: string
+  sesion_id: string
+  inicio: string
+  contexto: Contexto
+  dispositivo: Dispositivo
+  mediciones: Medicion[]
+}
+
+/* ───────────── B — src/diagnostico/ + api/reporte.ts ───────────── */
+
+export type Estado = 'bueno' | 'regular' | 'malo'
+
+export interface CuartoReporte {
+  cuarto: string
+  estado: Estado
+  /** % de la velocidad del plan que llega a ese cuarto. null si no hay plan. */
+  velocidad_vs_plan_pct: number | null
+  /** Una o dos frases, lenguaje de cliente, sin jerga. */
+  explicacion: string
+}
+
+export interface Recomendacion {
+  titulo: string
+  detalle: string
+  responsable: 'cliente' | 'win'
+}
+
+export interface Reporte {
+  version: string
+  /** 'plantilla' = el LLM falló y se usó el respaldo por reglas. */
+  generado_por: 'ia' | 'plantilla'
+  calificacion_general: Estado
+  titular: string
+  resumen: string
+  cuartos: CuartoReporte[]
+  causa_probable: string
+  recomendaciones: Recomendacion[]
+  requiere_visita_tecnica: boolean
+}
+
+/* ───────────── C — envío ───────────── */
+
+export interface Contacto {
+  nombre: string
+  telefono: string
+}
+
+export interface SolicitudEnvio {
+  sesion: Sesion
+  reporte: Reporte
+  contacto: Contacto
+}
+
+export interface RespuestaEnvio {
+  ok: boolean
+  ticket: string
+  /** false = se generó el ticket pero no se pudo persistir (modo demo). */
+  guardado: boolean
+}
+
+/* ───────────── Helpers de C ───────────── */
+
+export function nuevoSesionId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+  return `s_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+}
+
+/** Punto exacto donde lo de C y lo de A se juntan. */
+export function crearSesion(
+  contexto: Contexto,
+  resultado: ResultadoMedicion,
+  inicio: string,
+  sesionId: string,
+): Sesion {
+  return {
+    version: VERSION_CONTRATO,
+    sesion_id: sesionId,
+    inicio,
+    contexto,
+    dispositivo: resultado.dispositivo,
+    mediciones: resultado.mediciones,
+  }
+}

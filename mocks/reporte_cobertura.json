@@ -1,0 +1,22 @@
+{
+  "version": "1.1",
+  "generado_por": "ia",
+  "calificacion_general": "regular",
+  "titular": "Tu internet llega bien, pero el wifi no alcanza el segundo piso",
+  "resumen": "Junto al router recibes 192 Mbps de los 200 de tu plan, así que el servicio que entra a tu casa está correcto. El problema aparece al subir: en el dormitorio del 2do piso solo llegan 7.9 Mbps y en el estudio 3.1 Mbps, y en el patio el celular se quedó sin señal. Es un problema de alcance del wifi dentro de la casa, no de la conexión que te entrega WIN.",
+  "cuartos": [
+    { "cuarto": "Sala (junto al router)", "estado": "bueno", "velocidad_vs_plan_pct": 96, "explicacion": "Aquí llega prácticamente toda la velocidad de tu plan. El servicio entra bien a tu casa." },
+    { "cuarto": "Comedor", "estado": "bueno", "velocidad_vs_plan_pct": 71, "explicacion": "Buena señal, sin problemas para ningún uso." },
+    { "cuarto": "Cocina", "estado": "regular", "velocidad_vs_plan_pct": 31, "explicacion": "Se nota la primera caída fuerte. Alcanza para videollamadas, pero puede cortarse si varios se conectan a la vez." },
+    { "cuarto": "Dormitorio 2do piso", "estado": "malo", "velocidad_vs_plan_pct": 4, "explicacion": "Llega menos del 5% de tu plan y las respuestas tardan 88 ms. Los videos se van a pausar y las videollamadas se van a congelar." },
+    { "cuarto": "Estudio 2do piso", "estado": "malo", "velocidad_vs_plan_pct": 2, "explicacion": "El peor punto medido: 3.1 Mbps y se pierde 1 de cada 20 paquetes. No sirve para trabajar." },
+    { "cuarto": "Patio", "estado": "malo", "velocidad_vs_plan_pct": 0, "explicacion": "El celular no logró conectarse. El wifi simplemente no llega hasta aquí." }
+  ],
+  "causa_probable": "El router está en la sala del primer piso y la señal tiene que atravesar el techo para llegar al segundo. En una casa de 2 pisos un solo router casi nunca cubre ambos niveles.",
+  "recomendaciones": [
+    { "titulo": "Pide un repetidor o un equipo mesh para el segundo piso", "detalle": "Es la solución directa: un segundo punto de wifi arriba, conectado al router de abajo. Con eso el dormitorio y el estudio deberían pasar de 3–8 Mbps a más de 80 Mbps.", "responsable": "win" },
+    { "titulo": "Mientras tanto, sube el router a un mueble alto y despejado", "detalle": "Sácalo de detrás del televisor o del mueble cerrado. Solo con eso suele ganarse algo de alcance hacia el piso de arriba.", "responsable": "cliente" },
+    { "titulo": "Para tareas importantes, usa el primer piso", "detalle": "La sala y el comedor tienen buena señal. Si tienes una videollamada de trabajo, hazla desde ahí hasta que se instale el equipo del segundo piso.", "responsable": "cliente" }
+  ],
+  "requiere_visita_tecnica": true
+}
