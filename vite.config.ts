@@ -9,4 +9,14 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      // A: /lab.html es el banco de pruebas de la medición. En `vite dev` anda
+      // solo; esto es para que también entre en el build y en los previews.
+      input: {
+        principal: 'index.html',
+        lab: 'lab.html',
+      },
+    },
+  },
 })

@@ -67,6 +67,7 @@ export function Onboarding({ onListo }: { onListo: (contexto: Contexto) => void 
 
   return (
     <Pantalla
+      paso={1}
       titulo="Cuéntanos de tu casa"
       bajada="Sirve para comparar lo que mides contra lo que deberías recibir."
       pie={

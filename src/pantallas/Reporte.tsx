@@ -67,6 +67,7 @@ export function Reporte({
 
   return (
     <Pantalla
+      paso={3}
       pie={
         <>
           <Boton onClick={onEnviar}>
