@@ -25,6 +25,7 @@ export function Enviar({
 
   return (
     <Pantalla
+      paso={4}
       titulo="Enviar a WIN"
       bajada="Mandamos tu reporte completo al equipo de soporte. Te contactan por este número."
       pie={

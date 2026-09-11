@@ -10,10 +10,24 @@ export const VERSION_CONTRATO = '1.1'
 
 /* ───────────── A — src/medicion/ ───────────── */
 
-/** Detectado por A con las APIs del navegador (navigator.connection, userAgent). */
+/**
+ * Detectado por A con las APIs del navegador (navigator.connection, userAgent).
+ *
+ * Ojo: navigator.connection NO existe en Safari/iOS ni en Firefox, y `type`
+ * (el único campo que distingue wifi de celular) tampoco está garantizado en
+ * Chrome de escritorio. Por eso `conexion: 'desconocida'` es el caso normal,
+ * no la excepción, y A además le pregunta al usuario.
+ */
 export interface Dispositivo {
   conexion: 'wifi' | 'celular' | 'desconocida'
   navegador: string
+  /** true = el usuario confirmó a mano que está en el wifi de su casa. */
+  conexion_confirmada?: boolean
+  /** Network Information API. Referencial: Chrome redondea y topea downlink. */
+  effective_type?: string
+  downlink_mbps?: number
+  rtt_ms?: number
+  ahorro_datos?: boolean
 }
 
 /** Una medición = un cuarto. A produce una por cada parada de la caminata. */
@@ -26,8 +40,13 @@ export interface Medicion {
   descarga_mbps: number
   latencia_ms: number
   jitter_ms: number
+  /** % de pings sin respuesta dentro del timeout. No es pérdida de paquetes ICMP. */
   perdida_pct?: number
   muestras?: number
+  /** Cuántos bytes y en cuánto tiempo salió descarga_mbps. Sirve para descartar
+   *  mediciones demasiado cortas para ser confiables. */
+  bytes_descargados?: number
+  duracion_ms?: number
   /** Si el test falló en ese cuarto (sin señal, timeout, etc.). */
   error?: string
 }

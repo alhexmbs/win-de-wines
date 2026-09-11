@@ -17,7 +17,7 @@ export function Analizando() {
   }, [])
 
   return (
-    <Pantalla>
+    <Pantalla paso={3}>
       <div className="flex min-h-[70svh] flex-col items-center justify-center text-center">
         <div className="h-14 w-14 animate-spin rounded-full border-4 border-win-200 border-t-win-700" />
         <h1 className="mt-8 text-2xl font-bold text-win-900">Analizando tu casa</h1>
