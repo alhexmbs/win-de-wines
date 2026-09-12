@@ -7,6 +7,43 @@ const TEXTO_FASE: Record<Progreso['fase'], string> = {
   descarga: 'Midiendo la velocidad de descarga…',
 }
 
+/** Radio del anillo en el viewBox de 120x120. Grosor del trazo: 10. */
+const RADIO = 52
+const CIRCUNFERENCIA = 2 * Math.PI * RADIO
+
+/**
+ * Anillo tipo velocímetro: se llena con el progreso total de la medición
+ * (igual que la barra que reemplaza) y muestra en el centro el número que
+ * más importa según la fase actual — ms mientras mide latencia, Mbps
+ * mientras descarga. Los dos números completos siguen abajo en las Cifra.
+ */
+function Anillo({ pct, valor, unidad }: { pct: number; valor: string; unidad: string }) {
+  const offset = CIRCUNFERENCIA * (1 - pct / 100)
+  return (
+    <div className="relative mx-auto h-44 w-44">
+      <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+        <circle cx="60" cy="60" r={RADIO} fill="none" strokeWidth="10" className="stroke-win-100" />
+        <circle
+          cx="60"
+          cy="60"
+          r={RADIO}
+          fill="none"
+          strokeWidth="10"
+          strokeLinecap="round"
+          className="stroke-win-600"
+          strokeDasharray={CIRCUNFERENCIA}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 200ms ease-out' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <p className="text-4xl font-bold text-win-900 tabular-nums">{valor}</p>
+        <p className="text-sm font-semibold text-gray-500">{unidad}</p>
+      </div>
+    </div>
+  )
+}
+
 export function Medidor({
   cuarto,
   progreso,
@@ -19,6 +56,12 @@ export function Medidor({
   onCancelar: () => void
 }) {
   const pct = Math.round((progreso?.pct ?? 0) * 100)
+  const enLatencia = progreso === null || progreso.fase === 'latencia'
+  const valorAnillo = enLatencia
+    ? (progreso?.latencia_ms ?? null) === null
+      ? '—'
+      : Math.round(progreso!.latencia_ms!).toString()
+    : progreso!.mbps.toFixed(1)
 
   return (
     <Pantalla
@@ -32,14 +75,9 @@ export function Medidor({
       }
     >
       <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-win-200/40">
-        <div className="h-3 overflow-hidden rounded-full bg-win-100">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-win-600 to-win-500 transition-[width] duration-200 ease-out"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
+        <Anillo pct={pct} valor={valorAnillo} unidad={enLatencia ? 'ms' : 'Mbps'} />
 
-        <p className="mt-3 text-sm text-gray-600">
+        <p className="mt-4 text-center text-sm text-gray-600">
           {progreso === null ? 'Preparando…' : TEXTO_FASE[progreso.fase]}
         </p>
 
