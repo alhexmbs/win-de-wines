@@ -1,4 +1,5 @@
 import { Boton } from '../ui/Boton'
+import { IconoCheck } from '../ui/Iconos'
 import { Pantalla } from '../ui/Pantalla'
 
 export function Confirmacion({
@@ -34,8 +35,8 @@ export function Confirmacion({
       }
     >
       <div className="flex min-h-[60svh] flex-col items-center justify-center text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-bueno-bg text-4xl">
-          ✓
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-bueno-bg text-bueno">
+          <IconoCheck className="h-10 w-10" />
         </div>
         <h1 className="mt-7 text-3xl font-bold text-win-900">Reporte enviado</h1>
         <p className="mt-3 text-gray-600">

@@ -1,4 +1,5 @@
-import { CLASE_FONDO, CLASE_TEXTO, EMOJI_NIVEL, nivelDeIndice } from '../medicion/senal'
+import { CLASE_FONDO, CLASE_TEXTO, type Nivel, nivelDeIndice } from '../medicion/senal'
+import { IconoNivel } from '../ui/Iconos'
 
 /**
  * El árbol de cobertura por piso. Una sola pieza de presentación, usada por el
@@ -50,12 +51,21 @@ export function ArbolCobertura({ filas }: { filas: FilaMapa[] }) {
                 const nivel = nivelDeIndice(fila.indice)
                 const ultimo = i === delPiso.length - 1
                 return (
-                  <li key={`${fila.cuarto}-${i}`} className="flex items-start gap-2">
-                    <span
-                      className="mt-3 font-mono text-sm text-win-200 select-none"
-                      aria-hidden="true"
-                    >
-                      {ultimo ? '└──' : '├──'}
+                  <li key={`${fila.cuarto}-${i}`} className="flex items-stretch gap-2">
+                    {/*
+                      El conector del arbol. Antes eran los caracteres «└──» y
+                      «├──» en fuente mono: se desalineaban con la altura real
+                      de cada tarjeta y dejaban cara de salida de terminal. Esto
+                      es la misma forma dibujada con dos divs, asi que el tramo
+                      vertical mide siempre exactamente lo que mide la fila.
+                    */}
+                    <span className="relative w-4 shrink-0" aria-hidden="true">
+                      <span
+                        className={`absolute top-0 left-1/2 w-px -translate-x-1/2 bg-win-200 ${
+                          ultimo ? 'h-6' : 'h-full'
+                        }`}
+                      />
+                      <span className="absolute top-6 left-1/2 h-px w-1/2 bg-win-200" />
                     </span>
 
                     <div className="min-w-0 flex-1 rounded-2xl bg-white p-3 shadow-sm">
@@ -68,8 +78,11 @@ export function ArbolCobertura({ filas }: { filas: FilaMapa[] }) {
                             </span>
                           )}
                         </p>
-                        <p className={`shrink-0 text-sm font-bold ${CLASE_TEXTO[nivel]}`}>
-                          {EMOJI_NIVEL[nivel]} {CALIFICATIVO(fila.indice)}
+                        <p
+                          className={`flex shrink-0 items-center gap-1.5 text-sm font-bold ${CLASE_TEXTO[nivel]}`}
+                        >
+                          <IconoNivel nivel={nivel} />
+                          {CALIFICATIVO(fila.indice)}
                         </p>
                       </div>
 
@@ -101,12 +114,21 @@ export function ArbolCobertura({ filas }: { filas: FilaMapa[] }) {
   )
 }
 
+const LEYENDA: [Nivel, string][] = [
+  ['fuerte', '70-100 fuerte'],
+  ['media', '30-69 media'],
+  ['debil', '0-29 débil'],
+]
+
 export function LeyendaCobertura() {
   return (
     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-      <span>🟢 70-100 fuerte</span>
-      <span>🟡 30-69 media</span>
-      <span>🔴 0-29 débil</span>
+      {LEYENDA.map(([nivel, texto]) => (
+        <span key={nivel} className="flex items-center gap-1.5">
+          <IconoNivel nivel={nivel} className={`h-3.5 w-3.5 ${CLASE_TEXTO[nivel]}`} />
+          {texto}
+        </span>
+      ))}
     </div>
   )
 }

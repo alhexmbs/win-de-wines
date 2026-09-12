@@ -21,12 +21,6 @@
 
 export type Nivel = 'fuerte' | 'media' | 'debil'
 
-export const EMOJI_NIVEL: Record<Nivel, string> = {
-  fuerte: '🟢',
-  media: '🟡',
-  debil: '🔴',
-}
-
 export const TEXTO_NIVEL: Record<Nivel, string> = {
   fuerte: 'Señal fuerte',
   media: 'Señal media',

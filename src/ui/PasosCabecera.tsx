@@ -1,3 +1,5 @@
+import { IconoCheck } from './Iconos'
+
 const NOMBRES = ['Tu casa', 'Medición', 'Reporte', 'Enviar']
 
 /**
@@ -30,7 +32,7 @@ export function PasosCabecera({ actual }: { actual: number }) {
                       : 'bg-win-100 text-win-700/50'
                 }`}
               >
-                {hecho ? '✓' : numero}
+                {hecho ? <IconoCheck className="h-3.5 w-3.5" /> : numero}
               </span>
               <span
                 className={`ml-2 text-sm font-semibold ${

@@ -42,15 +42,13 @@ export function resultadoMock(nombre: NombreMock): ResultadoMedicion {
   return { dispositivo: sesion.dispositivo, mediciones: sesion.mediciones }
 }
 
-/** Elige el reporte mock que mejor calza con una sesión cualquiera. */
-export function reporteMockPara(sesion: Sesion): Reporte {
-  const referencia = sesion.mediciones.find((m) => m.es_referencia)
-  const plan = sesion.contexto.plan_mbps
-  if (referencia && plan && referencia.descarga_mbps < plan * 0.35) {
-    return MOCKS.general.reporte
-  }
-  const hayCuartoMalo = sesion.mediciones.some(
-    (m) => m.error !== undefined || (plan !== null && m.descarga_mbps < plan * 0.2),
-  )
-  return hayCuartoMalo ? MOCKS.cobertura.reporte : MOCKS.ok.reporte
-}
+/*
+ * Aquí vivía reporteMockPara(): elegía uno de los tres reportes enlatados para
+ * una sesión cualquiera. Se eliminó porque devolvía texto que hablaba de los
+ * cuartos del mock, no de los que el cliente acababa de medir. El doble de
+ * api.ts ahora llama a diagnosticar() de reglas.ts sobre las mediciones reales.
+ *
+ * MOCKS sigue aquí porque lo usa el atajo de demo ?mock= de App.tsx, que sí
+ * carga a propósito una sesión de ejemplo completa (sesión + reporte que se
+ * corresponden entre sí) para poder mostrar el reporte sin caminar la casa.
+ */

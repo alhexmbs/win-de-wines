@@ -1,5 +1,6 @@
 import type { Sesion } from '../contrato'
 import { nivelDeIndice } from '../medicion/senal'
+import { IconoNivel } from '../ui/Iconos'
 import { ArbolCobertura, LeyendaCobertura } from './ArbolCobertura'
 import { filasDeMediciones } from './filas'
 
@@ -63,13 +64,15 @@ export function MapaCalor({ sesion }: { sesion: Sesion }) {
         </p>
 
         {debiles.length > 0 && (
-          <p className="mt-3 text-sm font-semibold text-malo">
-            🔴 Señal débil en: {debiles.map((f) => f.cuarto).join(', ')}
+          <p className="mt-3 flex items-start gap-2 text-sm font-semibold text-malo">
+            <IconoNivel nivel="debil" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Señal débil en: {debiles.map((f) => f.cuarto).join(', ')}</span>
           </p>
         )}
         {medias.length > 0 && (
-          <p className="mt-1 text-sm font-semibold text-regular">
-            🟡 Señal media en: {medias.map((f) => f.cuarto).join(', ')}
+          <p className="mt-1 flex items-start gap-2 text-sm font-semibold text-regular">
+            <IconoNivel nivel="media" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>Señal media en: {medias.map((f) => f.cuarto).join(', ')}</span>
           </p>
         )}
       </div>

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
 import { Boton } from '../ui/Boton'
+import { IconoFlecha, IconoWifi } from '../ui/Iconos'
 import { CabeceraWin } from '../ui/CabeceraWin'
 import { PieWin } from '../ui/PieWin'
 
@@ -42,23 +42,6 @@ function Ondas() {
   )
 }
 
-function Icono({ children }: { children: ReactNode }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="h-6 w-6"
-    >
-      {children}
-    </svg>
-  )
-}
-
 /** Una de las dos conclusiones posibles del diagnóstico. */
 function Respuesta({
   condicion,
@@ -76,7 +59,7 @@ function Respuesta({
       <p className="text-[15px] font-bold text-win-900">{condicion}</p>
       <p className="mt-1.5 text-sm leading-relaxed text-gray-600">{explicacion}</p>
       <p className="mt-3 flex gap-2 text-sm font-semibold text-win-700">
-        <span aria-hidden="true">→</span>
+        <IconoFlecha className="mt-0.5 h-4 w-4 shrink-0" />
         <span>
           {salida}{' '}
           <span className="font-normal text-gray-500">
@@ -200,10 +183,7 @@ export function Bienvenida({ onEmpezar }: { onEmpezar: () => void }) {
         {/* ── Aviso ── */}
         <div className="mt-8 flex gap-3 rounded-2xl border border-win-200 bg-win-100/70 p-4 md:p-5">
           <span className="mt-0.5 shrink-0 text-win-600">
-            <Icono>
-              <path d="M5 12.55a11 11 0 0 1 14 0M8.5 16.1a6 6 0 0 1 7 0" />
-              <circle cx="12" cy="20" r="1" fill="currentColor" stroke="none" />
-            </Icono>
+            <IconoWifi />
           </span>
           <p className="text-sm leading-snug text-win-900 md:text-[15px]">
             <strong className="font-bold">Antes de empezar:</strong> conéctate al wifi de tu casa, no

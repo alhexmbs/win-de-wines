@@ -1,4 +1,5 @@
-import { CLASE_FONDO, CLASE_FONDO_SUAVE, CLASE_TEXTO, EMOJI_NIVEL, TEXTO_NIVEL, nivelDeIndice } from '../senal'
+import { CLASE_FONDO, CLASE_FONDO_SUAVE, CLASE_TEXTO, TEXTO_NIVEL, nivelDeIndice } from '../senal'
+import { IconoNivel } from '../../ui/Iconos'
 
 /**
  * El router y la señal que llega ahora mismo. Tres arcos que se encienden según
@@ -58,8 +59,9 @@ export function IndicadorSenal({
             {indice === null ? '—' : indice}
             <span className="ml-1 text-base font-semibold text-gray-500">/100</span>
           </p>
-          <p className={`text-sm font-semibold ${CLASE_TEXTO[nivel]}`}>
-            {EMOJI_NIVEL[nivel]} {indice === null ? 'Midiendo…' : TEXTO_NIVEL[nivel]}
+          <p className={`flex items-center gap-1.5 text-sm font-semibold ${CLASE_TEXTO[nivel]}`}>
+            {indice !== null && <IconoNivel nivel={nivel} />}
+            {indice === null ? 'Midiendo…' : TEXTO_NIVEL[nivel]}
             {latencia !== null && (
               <span className="font-normal text-gray-500"> · {Math.round(latencia)} ms</span>
             )}

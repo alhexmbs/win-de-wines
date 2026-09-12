@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react'
-
 /**
  * Pie de la landing, con estructura de sitio en producción.
  *
@@ -15,46 +13,42 @@ const COLUMNAS: [string, string[]][] = [
   ['Legal', ['Términos y condiciones', 'Política de privacidad', 'Libro de reclamaciones']],
 ]
 
+/**
+ * Marcas de las redes, como paths de RELLENO.
+ *
+ * Antes se dibujaban con `fill="none" stroke="currentColor"`, pero los paths de
+ * Facebook y YouTube son siluetas cerradas: al trazarlas salia el contorno
+ * hueco del logo en vez del logo. Y la de X era `M4 4l16 16M20 4L4 20`, o sea
+ * dos rayas cruzadas — una equis cualquiera, no la marca.
+ */
 const REDES: [string, string][] = [
   [
-    'Facebook',
-    'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z',
+    'Instagram',
+    'M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.43.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.43.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.43-.36-1.06-.41-2.23-.06-1.27-.07-1.65-.07-4.85s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.43-.16 1.06-.36 2.23-.41 1.27-.06 1.65-.07 4.85-.07zm0 2.16c-3.14 0-3.51.01-4.75.07-1.15.05-1.77.24-2.18.4-.55.21-.94.47-1.35.88-.41.41-.67.8-.88 1.35-.16.41-.35 1.03-.4 2.18-.06 1.24-.07 1.61-.07 4.75s.01 3.51.07 4.75c.05 1.15.24 1.77.4 2.18.21.55.47.94.88 1.35.41.41.8.67 1.35.88.41.16 1.03.35 2.18.4 1.24.06 1.61.07 4.75.07s3.51-.01 4.75-.07c1.15-.05 1.77-.24 2.18-.4.55-.21.94-.47 1.35-.88.41-.41.67-.8.88-1.35.16-.41.35-1.03.4-2.18.06-1.24.07-1.61.07-4.75s-.01-3.51-.07-4.75c-.05-1.15-.24-1.77-.4-2.18a3.6 3.6 0 0 0-.88-1.35 3.6 3.6 0 0 0-1.35-.88c-.41-.16-1.03-.35-2.18-.4-1.24-.06-1.61-.07-4.75-.07zm0 3.67a6.17 6.17 0 1 1 0 12.34 6.17 6.17 0 0 1 0-12.34zm0 2.17a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm6.41-3.85a1.44 1.44 0 1 1 0 2.88 1.44 1.44 0 0 1 0-2.88z',
   ],
-  ['X', 'M4 4l16 16M20 4L4 20'],
+  [
+    'Facebook',
+    'M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5.02 3.66 9.18 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.77-3.91 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.89h2.78l-.45 2.91h-2.33V22c4.78-.76 8.44-4.92 8.44-9.94z',
+  ],
+  [
+    'X',
+    'M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.65l-5.22-6.82-5.96 6.82H1.68l7.73-8.84L1.25 2.25h6.83l4.71 6.23zm-1.16 17.52h1.83L7.08 4.13H5.12z',
+  ],
   [
     'YouTube',
-    'M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33zM9.75 15.02V8.48l5.75 3.27-5.75 3.27z',
+    'M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2C0 8.07 0 12 0 12s0 3.93.5 5.8a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.93 24 12 24 12s0-3.93-.5-5.8zM9.55 15.57V8.43L15.82 12z',
   ],
 ]
 
-function Instagram() {
-  return (
-    <>
-      <rect x="2" y="2" width="20" height="20" rx="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <path d="M17.5 6.5h.01" />
-    </>
-  )
-}
-
-function IconoRed({ nombre, children }: { nombre: string; children: ReactNode }) {
+function IconoRed({ nombre, d }: { nombre: string; d: string }) {
   return (
     <a
       href="#"
       aria-label={nombre}
       className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-win-100 transition hover:bg-win-500 hover:text-white"
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="h-5 w-5"
-      >
-        {children}
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+        <path d={d} />
       </svg>
     </a>
   )
@@ -73,13 +67,8 @@ export function PieWin() {
             </p>
 
             <div className="mt-6 flex gap-2.5">
-              <IconoRed nombre="Instagram">
-                <Instagram />
-              </IconoRed>
               {REDES.map(([nombre, d]) => (
-                <IconoRed key={nombre} nombre={nombre}>
-                  <path d={d} />
-                </IconoRed>
+                <IconoRed key={nombre} nombre={nombre} d={d} />
               ))}
             </div>
           </div>

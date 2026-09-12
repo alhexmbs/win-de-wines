@@ -10,7 +10,14 @@
 import { readFileSync } from 'node:fs'
 import type { Sesion } from '../contrato.ts'
 import { type Parada, consolidar, mediana } from './caminata.ts'
-import { EMOJI_NIVEL, indiceDeCobertura, indiceEnVivo, nivelDeIndice } from './senal.ts'
+import { type Nivel, indiceDeCobertura, indiceEnVivo, nivelDeIndice } from './senal.ts'
+
+/** Solo para la salida de terminal de este script; la app usa <IconoNivel>. */
+const EMOJI_NIVEL: Record<Nivel, string> = {
+  fuerte: '🟢',
+  media: '🟡',
+  debil: '🔴',
+}
 
 const POR_DEFECTO = [
   'mocks/sesion_ok.json',

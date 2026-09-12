@@ -17,15 +17,32 @@ const ESTILOS: Record<Variante, string> = {
   texto: 'bg-transparent text-win-700 underline underline-offset-4 py-2',
 }
 
+/**
+ * Mientras carga, el boton conserva SU etiqueta y le suma un disco girando.
+ *
+ * Antes la reemplazaba por «Un momento…», el mismo texto para todos: al pulsar
+ * «Enviar reporte» la pantalla dejaba de decir que se estaba enviando algo, y
+ * el usuario perdia la unica confirmacion de que habia pulsado lo que queria.
+ * El giro comunica la espera; la etiqueta sigue comunicando la accion.
+ */
 export function Boton({ variante = 'primario', cargando = false, children, ...resto }: Props) {
   return (
     <button
       type="button"
       {...resto}
       disabled={resto.disabled || cargando}
+      aria-busy={cargando}
       className={`${BASE} ${ESTILOS[variante]} ${resto.className ?? ''}`}
     >
-      {cargando ? 'Un momento…' : children}
+      <span className="flex items-center justify-center gap-2.5">
+        {cargando && (
+          <span
+            aria-hidden="true"
+            className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current/30 border-t-current"
+          />
+        )}
+        {children}
+      </span>
     </button>
   )
 }
