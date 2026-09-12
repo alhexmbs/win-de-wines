@@ -5,6 +5,8 @@ import { ArbolCobertura } from '../mapa/ArbolCobertura'
 import { Boton } from '../ui/Boton'
 import { Pantalla } from '../ui/Pantalla'
 import {
+  PISOS_INICIALES,
+  PISO_MAXIMO,
   type Parada,
   clave,
   consolidar,
@@ -59,6 +61,8 @@ export function FlujoCaminata({
   const [dispositivo, setDispositivo] = useState<Dispositivo>(detectarDispositivo)
   const [opciones, setOpciones] = useState<Opciones>(NORMAL)
   const [piso, setPiso] = useState(1)
+  /** Crece cuando el usuario pulsa «+»: el onboarding permite «4+» pisos. */
+  const [pisos, setPisos] = useState<number[]>(PISOS_INICIALES)
   const [cuarto, setCuarto] = useState('Sala')
   const [paradas, setParadas] = useState<Parada[]>([])
   const [recorrido, setRecorrido] = useState<MuestraRecorrido[]>([])
@@ -230,6 +234,14 @@ export function FlujoCaminata({
     setPaso(esReferencia && referencia === null ? 'referencia' : 'caminata')
   }
 
+  /** Suma el siguiente piso y salta a él, que es lo que el usuario quiere al pulsar. */
+  function agregarPiso() {
+    if (pisos.length >= PISO_MAXIMO) return
+    const siguiente = pisos.length + 1
+    setPisos([...pisos, siguiente])
+    setPiso(siguiente)
+  }
+
   function cancelarMedicion() {
     cancelar.current?.abort()
     cancelar.current = null
@@ -275,8 +287,10 @@ export function FlujoCaminata({
         <p className="mt-6 mb-3 font-semibold text-win-900">¿Dónde está el router?</p>
         <SelectorUbicacion
           piso={piso}
+          pisos={pisos}
           cuarto={cuarto}
           puntosPorCuarto={{}}
+          onAgregarPiso={agregarPiso}
           onCambiarPiso={setPiso}
           onCambiarCuarto={setCuarto}
         />
@@ -383,8 +397,10 @@ export function FlujoCaminata({
       <p className="mt-7 mb-3 font-semibold text-win-900">¿Dónde estás ahora?</p>
       <SelectorUbicacion
         piso={piso}
+        pisos={pisos}
         cuarto={cuarto}
         puntosPorCuarto={puntosPorCuarto}
+        onAgregarPiso={agregarPiso}
         onCambiarPiso={setPiso}
         onCambiarCuarto={setCuarto}
       />

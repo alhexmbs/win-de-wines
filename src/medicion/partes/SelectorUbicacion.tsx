@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CUARTOS_SUGERIDOS, limpiar } from '../cuartos'
-import { PISOS } from '../caminata'
+import { PISO_MAXIMO } from '../caminata'
+import { IconoMas } from '../../ui/Iconos'
 
 /**
  * Piso + habitación. A diferencia del selector del día 1, aquí SÍ se puede
@@ -9,15 +10,20 @@ import { PISOS } from '../caminata'
  */
 export function SelectorUbicacion({
   piso,
+  pisos,
   cuarto,
   puntosPorCuarto,
+  onAgregarPiso,
   onCambiarPiso,
   onCambiarCuarto,
 }: {
   piso: number
+  /** Los pisos disponibles ahora mismo. Crece con el botón de agregar. */
+  pisos: number[]
   cuarto: string
   /** clave `piso|cuarto` → cuántos puntos lleva, para marcarlo en el chip. */
   puntosPorCuarto: Record<string, number>
+  onAgregarPiso: () => void
   onCambiarPiso: (piso: number) => void
   onCambiarCuarto: (cuarto: string) => void
 }) {
@@ -40,7 +46,7 @@ export function SelectorUbicacion({
   return (
     <div>
       <div className="mb-3 flex gap-2">
-        {PISOS.map((n) => (
+        {pisos.map((n) => (
           <button
             key={n}
             type="button"
@@ -54,6 +60,18 @@ export function SelectorUbicacion({
             Piso {n}
           </button>
         ))}
+
+        {pisos.length < PISO_MAXIMO && (
+          <button
+            type="button"
+            onClick={onAgregarPiso}
+            aria-label={`Agregar piso ${pisos.length + 1}`}
+            title={`Agregar piso ${pisos.length + 1}`}
+            className="flex shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-win-200 px-3 py-2 text-win-700 transition active:scale-[0.97] hover:border-win-500"
+          >
+            <IconoMas className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">

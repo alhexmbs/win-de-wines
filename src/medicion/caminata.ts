@@ -19,7 +19,16 @@ export interface Parada {
   puntos: Punto[]
 }
 
-export const PISOS = [1, 2, 3]
+/**
+ * Los pisos que se ofrecen al empezar. NO es un límite: el selector tiene un
+ * botón para agregar el siguiente, porque el onboarding permite decir «4+» y
+ * antes la caminata solo llegaba a 3 — quien viviera en un edificio de cinco
+ * no tenía dónde marcar los de arriba.
+ */
+export const PISOS_INICIALES = [1, 2, 3]
+
+/** Tope de cordura. Nadie mide el wifi de una torre entera cuarto por cuarto. */
+export const PISO_MAXIMO = 20
 
 export function clave(piso: number, cuarto: string): string {
   return `${piso}|${cuarto.trim().toLowerCase()}`

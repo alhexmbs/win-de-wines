@@ -106,6 +106,14 @@ export function IconoWifi({ className = 'h-6 w-6' }: { className?: string }) {
   )
 }
 
+export function IconoMas({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <path d="M12 5v14M5 12h14" />
+    </Icono>
+  )
+}
+
 export function IconoPapelera({ className = 'h-5 w-5' }: { className?: string }) {
   return (
     <Icono className={className}>
