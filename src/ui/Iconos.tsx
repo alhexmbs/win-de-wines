@@ -105,3 +105,24 @@ export function IconoWifi({ className = 'h-6 w-6' }: { className?: string }) {
     </Icono>
   )
 }
+
+export function IconoPapelera({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <path d="M4 7h16M10 11v6M14 11v6" />
+      <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </Icono>
+  )
+}
+
+/** Punto de exclamacion en triangulo. Avisos que piden una decision, no errores. */
+export function IconoAviso({ className = 'h-5 w-5' }: { className?: string }) {
+  return (
+    <Icono className={className}>
+      <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+      <path d="M12 9v4" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+    </Icono>
+  )
+}

@@ -17,6 +17,8 @@ import {
   medirCuarto,
 } from './medir'
 import { IndicadorSenal } from './partes/IndicadorSenal'
+import { PuntosTomados } from './partes/PuntosTomados'
+import { ResultadoPunto } from './partes/ResultadoPunto'
 import { Medidor } from './partes/Medidor'
 import { PasoConexion } from './partes/PasoConexion'
 import { SelectorUbicacion } from './partes/SelectorUbicacion'
@@ -24,7 +26,7 @@ import { indiceEnVivo } from './senal'
 import { iniciarSonda } from './sonda'
 import { useWakeLock } from './useWakeLock'
 
-type Paso = 'conexion' | 'referencia' | 'caminata' | 'midiendo'
+type Paso = 'conexion' | 'referencia' | 'caminata' | 'midiendo' | 'resultado'
 
 /** Referencia + al menos otra habitación: con una sola no hay nada que comparar. */
 const MINIMO_HABITACIONES = 2
@@ -58,6 +60,17 @@ export function FlujoCaminata({
   const [midiendoEtiqueta, setMidiendoEtiqueta] = useState('')
   const [avisoCache, setAvisoCache] = useState(false)
   const [bytes, setBytes] = useState(0)
+  /*
+   * El punto recién medido, todavía sin guardar. Lleva consigo el piso y el
+   * cuarto con los que se midió: si el usuario cambia el selector mientras mira
+   * el resultado, el punto igual se archiva donde correspondía.
+   */
+  const [pendiente, setPendiente] = useState<{
+    punto: Punto
+    piso: number
+    cuarto: string
+    esReferencia: boolean
+  } | null>(null)
 
   const cancelar = useRef<AbortController | null>(null)
   const wakeLock = useWakeLock(paso === 'caminata' || paso === 'midiendo')
@@ -79,6 +92,11 @@ export function FlujoCaminata({
 
   const indiceVivo = indiceEnVivo(ultimas.slice(-VENTANA_VIVO), latenciaReferencia)
   const mediciones = useMemo(() => consolidar(paradas), [paradas])
+  /** La referencia ya consolidada: contra ella se calcula el % de cada punto. */
+  const datosReferencia = useMemo(
+    () => mediciones.find((m) => m.es_referencia) ?? mediciones[0] ?? null,
+    [mediciones],
+  )
   const filas = useMemo(() => filasDeMediciones(mediciones), [mediciones])
 
   /* La sonda solo corre mientras se camina: durante una medición competiría con
@@ -144,10 +162,11 @@ export function FlujoCaminata({
         }
 
         setAvisoCache(desdeCache)
+        // Los bytes se gastaron aunque después descarte el punto.
         setBytes((b) => b + (medicion.bytes_descargados ?? 0))
-        setParadas((prev) => agregarPunto(prev, piso, nombre, esReferencia, punto))
         setDispositivo((d) => ({ ...d, ...datosDeRedFrescos() }))
-        setPaso('caminata')
+        setPendiente({ punto, piso, cuarto: nombre, esReferencia })
+        setPaso('resultado')
       } catch {
         if (!ctrl.signal.aborted) setPaso(esReferencia ? 'referencia' : 'caminata')
       } finally {
@@ -157,6 +176,21 @@ export function FlujoCaminata({
     },
     [cuarto, opciones, piso],
   )
+
+  function guardarPendiente() {
+    if (pendiente === null) return
+    const { piso: pi, cuarto: cu, esReferencia, punto } = pendiente
+    setParadas((prev) => agregarPunto(prev, pi, cu, esReferencia, punto))
+    setPendiente(null)
+    setPaso('caminata')
+  }
+
+  function descartarPendiente() {
+    const esReferencia = pendiente?.esReferencia ?? false
+    setPendiente(null)
+    // Si se descarta la referencia y aún no hay ninguna, hay que volver a pedirla.
+    setPaso(esReferencia && referencia === null ? 'referencia' : 'caminata')
+  }
 
   function cancelarMedicion() {
     cancelar.current?.abort()
@@ -231,7 +265,26 @@ export function FlujoCaminata({
     )
   }
 
-  /* ─────────────── 4. la caminata ─────────────── */
+  /* ─────────────── 4. el punto recién medido, antes de guardarlo ─────────────── */
+
+  if (paso === 'resultado' && pendiente !== null) {
+    const k = clave(pendiente.piso, pendiente.cuarto)
+    const yaTiene = paradas.find((p) => clave(p.piso, p.cuarto) === k)?.puntos ?? []
+
+    return (
+      <ResultadoPunto
+        etiqueta={etiquetaDeCuarto(pendiente.piso, pendiente.cuarto, pendiente.esReferencia)}
+        numero={yaTiene.length + 1}
+        punto={pendiente.punto}
+        anteriores={yaTiene}
+        referencia={pendiente.esReferencia ? null : datosReferencia}
+        onGuardar={guardarPendiente}
+        onDescartar={descartarPendiente}
+      />
+    )
+  }
+
+  /* ─────────────── 5. la caminata ─────────────── */
 
   const nombreLimpio = limpiar(cuarto)
   const puedeMedir = nombreLimpio.length >= 2
@@ -303,13 +356,18 @@ export function FlujoCaminata({
             <span className="text-xs text-gray-500">{megasGastadas(bytes)} MB usados</span>
           </div>
           <ArbolCobertura filas={filas} />
-          <Boton
-            variante="texto"
-            onClick={() => setParadas((prev) => quitarUltimoPunto(prev, piso, nombreLimpio))}
-            disabled={puntosAqui === 0}
-          >
-            Borrar el último punto de {nombreLimpio === '' ? 'este cuarto' : nombreLimpio}
-          </Boton>
+
+          <h3 className="mt-7 mb-1 font-semibold text-win-900">Puntos que tomaste</h3>
+          <p className="mb-3 text-sm text-gray-600">
+            Cada cuarto se resume con la mediana de sus puntos. Si uno salió mal o quedó en el
+            cuarto equivocado, bórralo aquí sin perder los demás.
+          </p>
+          <PuntosTomados
+            paradas={paradas}
+            referencia={datosReferencia}
+            onBorrarPunto={(pi, cu, i) => setParadas((prev) => quitarPunto(prev, pi, cu, i))}
+            onBorrarCuarto={(pi, cu) => setParadas((prev) => quitarCuarto(prev, pi, cu))}
+          />
         </div>
       )}
     </Pantalla>
@@ -334,11 +392,22 @@ function agregarPunto(
   return copia
 }
 
-function quitarUltimoPunto(paradas: Parada[], piso: number, cuarto: string): Parada[] {
+/** Quita UN punto concreto por su posición dentro del cuarto. */
+function quitarPunto(paradas: Parada[], piso: number, cuarto: string, indice: number): Parada[] {
   const k = clave(piso, cuarto)
   return paradas
-    .map((p) => (clave(p.piso, p.cuarto) === k ? { ...p, puntos: p.puntos.slice(0, -1) } : p))
+    .map((p) =>
+      clave(p.piso, p.cuarto) === k
+        ? { ...p, puntos: p.puntos.filter((_, i) => i !== indice) }
+        : p,
+    )
     .filter((p) => p.puntos.length > 0)
+}
+
+/** Quita el cuarto entero con todos sus puntos. */
+function quitarCuarto(paradas: Parada[], piso: number, cuarto: string): Parada[] {
+  const k = clave(piso, cuarto)
+  return paradas.filter((p) => clave(p.piso, p.cuarto) !== k)
 }
 
 /** navigator.connection cambia durante la caminata; nos quedamos con lo último. */
