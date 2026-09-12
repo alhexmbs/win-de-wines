@@ -6,7 +6,7 @@
  * Sin ella, responde igual con un mensaje de respaldo (ver chat.ts).
  */
 import type { Reporte, Sesion } from '../src/contrato.ts'
-import { responderChat } from '../src/diagnostico/chat.ts'
+import { generarRespuestaChat } from '../src/diagnostico/chat.ts'
 
 const LIMITE_BYTES = 256 * 1024
 
@@ -50,6 +50,24 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: 'Falta la pregunta.' }, 400)
   }
 
-  const respuesta = await responderChat(sesion, reporte, pregunta)
-  return json({ respuesta })
+  // F8: la respuesta sale en texto plano, trozo a trozo, no como JSON de una
+  // sola vez. El cliente la va mostrando a medida que llega (ver src/api.ts).
+  const codificador = new TextEncoder()
+  const cuerpoStream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        for await (const trozo of generarRespuestaChat(sesion, reporte, pregunta)) {
+          controller.enqueue(codificador.encode(trozo))
+        }
+      } catch (e) {
+        console.error('[api/chat] el stream se cortó a mitad:', e)
+      } finally {
+        controller.close()
+      }
+    },
+  })
+
+  return new Response(cuerpoStream, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
 }

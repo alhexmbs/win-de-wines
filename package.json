@@ -8,11 +8,14 @@
     "probar": "node src/diagnostico/probar.ts",
     "probar:senal": "node src/medicion/probar-senal.ts",
     "probar:plano": "node src/plano/probar-plano.ts",
+    "probar:calor": "node src/mapa/probar-calor.ts",
+    "probar:analisis": "node src/mapa/probar-analisis.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

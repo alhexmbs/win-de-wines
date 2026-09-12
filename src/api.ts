@@ -94,10 +94,49 @@ function ticketLocal(): string {
  * sentido (no hay "plantilla" de chat): sin `vercel dev` corriendo, esto da
  * 404 y el componente de chat lo atrapa y muestra su propio mensaje, sin
  * tumbar el resto del reporte.
+ *
+ * F8: /api/chat devuelve texto plano en streaming, no JSON de una vez. Se lee
+ * el cuerpo a medida que llega y se le avisa a `alTrozo` con el texto
+ * acumulado hasta ahora, para que la UI lo vaya mostrando escribirse solo.
  */
-export async function preguntarChat(sesion: Sesion, reporte: Reporte, pregunta: string): Promise<string> {
-  const { respuesta } = await postJson<{ respuesta: string }>('/api/chat', { sesion, reporte, pregunta })
-  return respuesta
+export async function preguntarChat(
+  sesion: Sesion,
+  reporte: Reporte,
+  pregunta: string,
+  alTrozo: (acumulado: string) => void,
+): Promise<void> {
+  const control = new AbortController()
+  const t = setTimeout(() => control.abort(), 45000)
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sesion, reporte, pregunta }),
+      signal: control.signal,
+    })
+    if (!res.ok) {
+      const texto = await res.text().catch(() => '')
+      throw new ErrorApi(texto || `HTTP ${res.status}`, res.status)
+    }
+
+    const lector = res.body?.getReader()
+    if (lector === undefined) {
+      // Navegador sin streaming body: se muestra todo de una vez igual.
+      alTrozo(await res.text())
+      return
+    }
+
+    const decodificador = new TextDecoder()
+    let acumulado = ''
+    for (;;) {
+      const { done, value } = await lector.read()
+      if (done) break
+      acumulado += decodificador.decode(value, { stream: true })
+      alTrozo(acumulado)
+    }
+  } finally {
+    clearTimeout(t)
+  }
 }
 
 /** Esto sí es de C y es real desde el día 1. */

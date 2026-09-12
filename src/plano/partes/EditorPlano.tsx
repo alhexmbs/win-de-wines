@@ -57,6 +57,11 @@ interface Props {
   onMarcar?: (marca: Marca) => void
   /** La marca «estoy aquí» a dibujar, si hay. */
   marca?: Marca | null
+  /**
+   * Capa debajo de las habitaciones (el mapa de calor del reporte, F5). No
+   * captura toques ni se ve afectada por la interacción del editor.
+   */
+  fondo?: ReactNode
   /** Tamaño del contenedor, p. ej. "aspect-[4/3]". */
   className?: string
 }
@@ -102,6 +107,24 @@ interface Gesto {
   punto: PuntoPlano | null
 }
 
+/** F8: dos dedos en el fondo hacen zoom (distancia) y desplazan (punto medio). */
+interface Pellizco {
+  /** Pantalla → metros con la vista de cuando empezó el pellizco, congelada. */
+  inversa: DOMMatrix
+  distanciaInicial: number
+  medioInicial: DOMPoint
+  vistaInicial: Vista
+}
+
+/** Distancia y punto medio en pantalla entre los dos dedos activos. */
+function medidasDePellizco(punteros: Map<number, { x: number; y: number }>) {
+  const [a, b] = [...punteros.values()]
+  return {
+    distancia: Math.hypot(b.x - a.x, b.y - a.y),
+    medio: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+  }
+}
+
 export function EditorPlano({
   estado,
   piso,
@@ -112,6 +135,7 @@ export function EditorPlano({
   modo = 'acomodar',
   onMarcar,
   marca = null,
+  fondo,
   className = '',
 }: Props) {
   const habitaciones = habitacionesDelPiso(estado, piso)
@@ -124,6 +148,9 @@ export function EditorPlano({
 
   const svg = useRef<SVGSVGElement>(null)
   const gesto = useRef<Gesto | null>(null)
+  /** F8: pellizco para hacer zoom. Client coords de cada dedo, por pointerId. */
+  const punteros = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const pellizco = useRef<Pellizco | null>(null)
   const patron = `grilla-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const [tamano, setTamano] = useState({ ancho: 0, alto: 0 })
 
@@ -171,8 +198,8 @@ export function EditorPlano({
     habitacion: Habitacion | null = null,
     punto: PuntoPlano | null = null,
   ) {
-    // Un solo dedo a la vez. El pellizco para hacer zoom llega en el pulido.
-    if (e.button !== 0 || gesto.current !== null) return
+    // Un gesto de un dedo a la vez, y ninguno mientras haya un pellizco activo.
+    if (e.button !== 0 || gesto.current !== null || pellizco.current !== null) return
     const el = svg.current
     const ctm = el?.getScreenCTM()
     if (el === null || ctm === null || ctm === undefined) return
@@ -205,7 +232,57 @@ export function EditorPlano({
     )
   }
 
+  /*
+   * F8: zoom con pellizco. Corre en la fase de captura del <svg>, ANTES de que
+   * cada habitación/punto reciba el evento y llame a `empezar()` — así, no
+   * importa dónde caiga el segundo dedo, el pellizco siempre gana.
+   */
+  function alBajarDedo(e: EventoPuntero<SVGSVGElement>) {
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    if (punteros.current.size !== 2) return
+
+    const el = svg.current
+    const ctm = el?.getScreenCTM()
+    if (el === null || ctm === null || ctm === undefined) return
+
+    // Un gesto de un dedo ya en curso se cancela: dos dedos ahora es pellizco.
+    if (gesto.current !== null) {
+      el.releasePointerCapture(gesto.current.puntero)
+      gesto.current = null
+    }
+
+    const inversa = ctm.inverse()
+    const { distancia, medio } = medidasDePellizco(punteros.current)
+    pellizco.current = {
+      inversa,
+      distanciaInicial: distancia,
+      medioInicial: new DOMPoint(medio.x, medio.y).matrixTransform(inversa),
+      vistaInicial: vista,
+    }
+  }
+
+  function alMoverDedo(e: EventoPuntero<SVGSVGElement>) {
+    if (!punteros.current.has(e.pointerId)) return
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+
+    const p = pellizco.current
+    if (p === null || punteros.current.size < 2) return
+
+    const { distancia, medio } = medidasDePellizco(punteros.current)
+    const factor = distancia / p.distanciaInicial
+    const medioActual = new DOMPoint(medio.x, medio.y).matrixTransform(p.inversa)
+
+    const escalada = acercar(p.vistaInicial, factor)
+    cambiarVista(desplazar(escalada, -(medioActual.x - p.medioInicial.x), -(medioActual.y - p.medioInicial.y)))
+  }
+
+  function alSoltarDedo(e: EventoPuntero<SVGSVGElement>) {
+    punteros.current.delete(e.pointerId)
+    if (punteros.current.size < 2) pellizco.current = null
+  }
+
   function arrastrar(e: EventoPuntero<SVGSVGElement>) {
+    if (pellizco.current !== null) return
     const g = gesto.current
     if (g === null || g.puntero !== e.pointerId) return
     if (!g.movio && Math.hypot(e.clientX - g.cliente.x, e.clientY - g.cliente.y) < UMBRAL_ARRASTRE_PX) {
@@ -313,6 +390,10 @@ export function EditorPlano({
         onPointerMove={arrastrar}
         onPointerUp={terminar}
         onPointerCancel={terminar}
+        onPointerDownCapture={alBajarDedo}
+        onPointerMoveCapture={alMoverDedo}
+        onPointerUpCapture={alSoltarDedo}
+        onPointerCancelCapture={alSoltarDedo}
       >
         <defs>
           <pattern id={patron} width="1" height="1" patternUnits="userSpaceOnUse">
@@ -328,6 +409,8 @@ export function EditorPlano({
           height={vista.alto * 3}
           fill={`url(#${patron})`}
         />
+
+        {fondo}
 
         {habitaciones.map((h) => {
           const activa = h.id === idHabitacion

@@ -1,18 +1,24 @@
 import type { Sesion } from '../contrato'
 import { nivelDeIndice } from '../medicion/senal'
 import { IconoNivel } from '../ui/Iconos'
+import { estadoDesdeSesion } from '../plano/estado.ts'
+import { AnalisisZonas } from './AnalisisZonas.tsx'
+import { PlanoCalor } from './PlanoCalor.tsx'
 import { ArbolCobertura, LeyendaCobertura } from './ArbolCobertura'
 import { filasDeMediciones } from './filas'
 
 /**
- * Mapa de cobertura del reporte. Recibe la Sesion tal como viaja en el
- * contrato, así que también dibuja las sesiones del día 1 y los mocks, que no
- * traen `piso` ni `indice`: en ese caso el índice se calcula a partir de las
- * mismas mediciones y todo se cuelga del piso 1.
+ * Mapa de cobertura del reporte. F4+F5: si la sesión trae un plano (caminata
+ * sobre plano), se dibuja el mapa de calor por interpolación sobre el esquema
+ * de la casa. Las sesiones del día 1 y los mocks viejos no traen `plano`, así
+ * que siguen viéndose como la lista de siempre (ArbolCobertura) — no se les
+ * quita nada.
  */
 export function MapaCalor({ sesion }: { sesion: Sesion }) {
   const filas = filasDeMediciones(sesion.mediciones)
   if (filas.length === 0) return null
+
+  const estadoPlano = estadoDesdeSesion(sesion)
 
   const debiles = filas.filter((f) => nivelDeIndice(f.indice) === 'debil')
   const medias = filas.filter((f) => nivelDeIndice(f.indice) === 'media')
@@ -51,7 +57,14 @@ export function MapaCalor({ sesion }: { sesion: Sesion }) {
         </p>
       )}
 
-      <ArbolCobertura filas={filas} />
+      {estadoPlano !== null ? (
+        <>
+          <PlanoCalor estado={estadoPlano} />
+          <AnalisisZonas estado={estadoPlano} />
+        </>
+      ) : (
+        <ArbolCobertura filas={filas} />
+      )}
 
       <div className="mt-5 border-t border-win-200/60 pt-4">
         <LeyendaCobertura />

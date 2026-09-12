@@ -26,6 +26,8 @@ function mensajeDeError(e: unknown): string {
 export function Chat({ sesion, reporte }: { sesion: Sesion; reporte: Reporte }) {
   const [pregunta, setPregunta] = useState('')
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
+  /** F8: la respuesta que se está escribiendo ahora, trozo a trozo. */
+  const [enProgreso, setEnProgreso] = useState<Mensaje | null>(null)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,12 +38,18 @@ export function Chat({ sesion, reporte }: { sesion: Sesion; reporte: Reporte }) 
     setCargando(true)
     setError(null)
     setPregunta('')
+    setEnProgreso({ pregunta: limpia, respuesta: '' })
     try {
-      const respuesta = await preguntarChat(sesion, reporte, limpia)
-      setMensajes((prev) => [...prev, { pregunta: limpia, respuesta }])
+      let ultimaRespuesta = ''
+      await preguntarChat(sesion, reporte, limpia, (acumulado) => {
+        ultimaRespuesta = acumulado
+        setEnProgreso({ pregunta: limpia, respuesta: acumulado })
+      })
+      setMensajes((prev) => [...prev, { pregunta: limpia, respuesta: ultimaRespuesta }])
     } catch (e) {
       setError(mensajeDeError(e))
     } finally {
+      setEnProgreso(null)
       setCargando(false)
     }
   }
@@ -66,19 +74,30 @@ export function Chat({ sesion, reporte }: { sesion: Sesion; reporte: Reporte }) 
         </div>
       )}
 
-      {mensajes.length > 0 && (
-        <ul className="mt-4 space-y-4">
+      {(mensajes.length > 0 || enProgreso !== null) && (
+        <ul className="mt-4 space-y-4" aria-live="polite">
           {mensajes.map((m, i) => (
             <li key={i}>
               <p className="text-sm font-semibold text-win-900">Tú: {m.pregunta}</p>
               <p className="mt-1 text-[15px] leading-relaxed text-gray-700">{m.respuesta}</p>
             </li>
           ))}
+          {enProgreso !== null && (
+            <li>
+              <p className="text-sm font-semibold text-win-900">Tú: {enProgreso.pregunta}</p>
+              <p className="mt-1 text-[15px] leading-relaxed text-gray-700">
+                {enProgreso.respuesta === '' ? 'Pensando…' : enProgreso.respuesta}
+              </p>
+            </li>
+          )}
         </ul>
       )}
 
-      {cargando && <p className="mt-3 text-sm text-gray-500">Pensando…</p>}
-      {error !== null && <p className="mt-3 text-sm text-red-600">{error}</p>}
+      {error !== null && (
+        <p className="mt-3 text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
 
       <form
         className="mt-4 flex gap-2"
@@ -87,7 +106,11 @@ export function Chat({ sesion, reporte }: { sesion: Sesion; reporte: Reporte }) 
           void enviar(pregunta)
         }}
       >
+        <label htmlFor="pregunta-chat" className="sr-only">
+          Tu pregunta sobre el reporte
+        </label>
         <input
+          id="pregunta-chat"
           type="text"
           value={pregunta}
           onChange={(e) => setPregunta(e.target.value)}

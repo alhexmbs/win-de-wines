@@ -1,0 +1,53 @@
+{
+  "version": "1.1",
+  "generado_por": "ia",
+  "calificacion_general": "malo",
+  "titular": "Tu wifi funciona bien cerca del router, pero no llega al piso 2",
+  "resumen": "Tu internet anda bien en la sala donde está el router, pero la señal se debilita mucho en el piso 2. Esto es normal: un solo router tiene dificultad para atravesar los techos y pisos de concreto. Con una solución simple, podemos mejorar la cobertura en toda tu casa.",
+  "cuartos": [
+    {
+      "cuarto": "Sala (junto al router)",
+      "estado": "bueno",
+      "velocidad_vs_plan_pct": 75,
+      "explicacion": "La señal llega muy bien aquí. Puedes hacer videollamadas, ver películas y usar varios dispositivos sin problemas."
+    },
+    {
+      "cuarto": "Dormitorio",
+      "estado": "regular",
+      "velocidad_vs_plan_pct": 50,
+      "explicacion": "La señal es aceptable, pero si conectas muchos dispositivos o haces videollamadas puede fallar. Va bien para lo básico."
+    },
+    {
+      "cuarto": "Baño",
+      "estado": "malo",
+      "velocidad_vs_plan_pct": 28,
+      "explicacion": "La señal es muy débil aquí. Los videos se van a cortar y las videollamadas van a ir lento."
+    },
+    {
+      "cuarto": "Dormitorio (piso 2)",
+      "estado": "malo",
+      "velocidad_vs_plan_pct": 10,
+      "explicacion": "La señal casi no llega. Es muy difícil hacer videollamadas o ver videos en este lugar."
+    },
+    {
+      "cuarto": "Baño (piso 2)",
+      "estado": "malo",
+      "velocidad_vs_plan_pct": 3,
+      "explicacion": "La señal es casi nula aquí. El internet no funciona de forma práctica en este espacio."
+    }
+  ],
+  "causa_probable": "El router está en el piso 1 y los pisos de concreto bloquean mucha señal. Un solo router casi nunca cubre bien más de un piso completo.",
+  "recomendaciones": [
+    {
+      "titulo": "Repetidor o equipo mesh para el piso 2",
+      "detalle": "Un segundo punto de wifi en ese piso es la solución: amplía la cobertura de forma sencilla y resuelve el problema en todos los cuartos del segundo piso.",
+      "responsable": "win"
+    },
+    {
+      "titulo": "Reubica el router a un lugar alto y despejado",
+      "detalle": "Sácalo de armarios o de detrás de la TV y ponlo en un lugar abierto y elevado. Es gratis y mejora el alcance sin necesidad de equipos nuevos.",
+      "responsable": "cliente"
+    }
+  ],
+  "requiere_visita_tecnica": false
+}
