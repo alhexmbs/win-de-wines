@@ -20,6 +20,7 @@ import { Reporte } from './pantallas/Reporte'
  */
 import { FlujoCaminata as FlujoMedicion } from './medicion/FlujoCaminata'
 import { MapaCalor } from './mapa/MapaCalor'
+import { Chat } from './chat/Chat'
 
 type Paso =
   | 'bienvenida'
@@ -161,7 +162,7 @@ export default function App() {
           reporte={s.reporte}
           onEnviar={() => setS((prev) => ({ ...prev, paso: 'enviar' }))}
           mapa={<MapaCalor sesion={s.sesion} />}
-          /* DÍA 2: chat={<Chat sesion={s.sesion} reporte={s.reporte} />} */
+          chat={<Chat sesion={s.sesion} reporte={s.reporte} />}
         />
       )
 
