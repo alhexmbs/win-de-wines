@@ -89,6 +89,17 @@ function ticketLocal(): string {
   return `WIN-${fecha}-${sufijo}`
 }
 
+/**
+ * B, día 2. A diferencia del reporte, el chat no tiene un doble local con
+ * sentido (no hay "plantilla" de chat): sin `vercel dev` corriendo, esto da
+ * 404 y el componente de chat lo atrapa y muestra su propio mensaje, sin
+ * tumbar el resto del reporte.
+ */
+export async function preguntarChat(sesion: Sesion, reporte: Reporte, pregunta: string): Promise<string> {
+  const { respuesta } = await postJson<{ respuesta: string }>('/api/chat', { sesion, reporte, pregunta })
+  return respuesta
+}
+
 /** Esto sí es de C y es real desde el día 1. */
 export async function enviarReporte(
   sesion: Sesion,
