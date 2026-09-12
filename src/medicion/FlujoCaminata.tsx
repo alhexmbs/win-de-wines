@@ -10,8 +10,8 @@ import { detectarDispositivo, sabeDistinguirConexion } from './dispositivo'
 import {
   AHORRO,
   NORMAL,
-  PUNTO,
-  PUNTO_AHORRO,
+  PUNTO_AHORRO_EFECTIVO,
+  PUNTO_EFECTIVO,
   type Opciones,
   type Progreso,
   medirCuarto,
@@ -138,8 +138,8 @@ export function FlujoCaminata({
       const opcionesPunto = esReferencia
         ? opciones
         : opciones === AHORRO
-          ? PUNTO_AHORRO
-          : PUNTO
+          ? PUNTO_AHORRO_EFECTIVO
+          : PUNTO_EFECTIVO
 
       try {
         const { medicion, desdeCache } = await medirCuarto(
@@ -245,7 +245,9 @@ export function FlujoCaminata({
 
         {opciones === AHORRO && (
           <p className="mt-4 text-sm text-gray-600">
-            Modo ahorro activado: cada punto usará ~1.5 MB en vez de 3 MB.
+            Modo ahorro activado: cada punto usará ~
+            {(PUNTO_AHORRO_EFECTIVO.topeBytes / (1024 * 1024)).toFixed(1)} MB en vez de{' '}
+            {(PUNTO_EFECTIVO.topeBytes / (1024 * 1024)).toFixed(1)} MB.
           </p>
         )}
       </Pantalla>

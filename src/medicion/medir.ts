@@ -76,6 +76,55 @@ export const PUNTO_AHORRO: Opciones = {
 /** Ping de la sonda continua: 3 bytes, timeout corto, sin gastar datos. */
 export const SONDA: Opciones = { ...NORMAL, pings: 1, msTimeoutPing: 2500 }
 
+/* ───────────────── presupuesto ampliado por punto ───────────────── */
+
+/**
+ * Multiplica el presupuesto (datos y tiempo) de cada punto de la caminata.
+ *
+ * EL PROBLEMA QUE RESUELVE: 3 MB son 24 megabits; con un enlace de ~25 Mbps se
+ * agotan en menos de un segundo. Para un wifi estable alcanza y sobra. Pero
+ * cuando el usuario vuelve de una zona sin señal, la radio del equipo viene en
+ * marcha lenta —bajó de modulación al perder paquetes y sube de a poco— y tarda
+ * varios segundos en recuperarse. La medición termina antes de que eso pase, y
+ * devuelve la velocidad de la recuperación en vez de la capacidad del sitio: el
+ * mismo punto medido dos veces da dos números distintos según de dónde venías.
+ *
+ * El tope está en 3 MB para no quemarle los datos móviles al cliente. Cuando
+ * los archivos se sirven desde una laptop de la misma red no le cuestan datos a
+ * nadie, y ahí conviene subirlo:
+ *
+ *   VITE_FACTOR_MEDICION=4   en .env.local
+ *
+ * Solo afecta a los puntos de la caminata. La referencia (NORMAL) ya tiene 20 MB
+ * y 4 s, que es holgado, y se toma junto al router al empezar.
+ */
+const FACTOR_MAXIMO = 10
+/** Aunque sobren datos, nadie se queda quieto más de esto midiendo un punto. */
+const MS_DESCARGA_MAXIMA = 6000
+
+function factorMedicion(): number {
+  const crudo = Number(
+    (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_FACTOR_MEDICION,
+  )
+  if (!Number.isFinite(crudo) || crudo < 1) return 1
+  return Math.min(crudo, FACTOR_MAXIMO)
+}
+
+function ampliar(op: Opciones, factor: number): Opciones {
+  if (factor === 1) return op
+  return {
+    ...op,
+    topeBytes: Math.round(op.topeBytes * factor),
+    msDescarga: Math.min(Math.round(op.msDescarga * factor), MS_DESCARGA_MAXIMA),
+  }
+}
+
+const FACTOR = factorMedicion()
+
+/** Los perfiles que usa de verdad la caminata, ya con el factor aplicado. */
+export const PUNTO_EFECTIVO = ampliar(PUNTO, FACTOR)
+export const PUNTO_AHORRO_EFECTIVO = ampliar(PUNTO_AHORRO, FACTOR)
+
 export type Fase = 'latencia' | 'descarga'
 
 export interface Progreso {
