@@ -2,7 +2,13 @@ import type { Punto } from '../../contrato'
 import { Boton } from '../../ui/Boton'
 import { IconoAviso } from '../../ui/Iconos'
 import { Pantalla } from '../../ui/Pantalla'
-import { CLASE_TEXTO, nivelDeIndice, porcentajeVsReferencia, type DatosSenal } from '../senal'
+import {
+  CLASE_TEXTO,
+  nivelDeIndice,
+  pctMostrable,
+  porcentajeVsReferencia,
+  type DatosSenal,
+} from '../senal'
 
 /**
  * Lo que midió ESTE punto, antes de guardarlo.
@@ -53,7 +59,7 @@ export function ResultadoPunto({
   onDescartar: () => void
 }) {
   const fallo = punto.error !== undefined
-  const pct = fallo ? null : porcentajeVsReferencia(punto, referencia)
+  const pct = fallo ? null : pctMostrable(porcentajeVsReferencia(punto, referencia))
   const nivel = nivelDeIndice(pct ?? 0)
 
   /*
@@ -66,13 +72,11 @@ export function ResultadoPunto({
     buenos.length === 0
       ? null
       : buenos.reduce((a, p) => a + p.descarga_mbps, 0) / buenos.length
-  const saltoRaro =
-    !fallo &&
-    previo !== null &&
-    previo > 0 &&
-    punto.descarga_mbps > 0 &&
-    (punto.descarga_mbps / previo >= FACTOR_SOSPECHA ||
-      previo / punto.descarga_mbps >= FACTOR_SOSPECHA)
+  const hayBase = !fallo && previo !== null && previo > 0 && punto.descarga_mbps > 0
+  /** Mucho MÁS rápido que los anteriores: lo normal es que haya cambiado de cuarto. */
+  const saltoArriba = hayBase && punto.descarga_mbps / (previo as number) >= FACTOR_SOSPECHA
+  /** Mucho MÁS lento: suele ser el wifi del equipo todavía recuperándose. */
+  const saltoAbajo = hayBase && (previo as number) / punto.descarga_mbps >= FACTOR_SOSPECHA
 
   return (
     <Pantalla
@@ -115,7 +119,7 @@ export function ResultadoPunto({
         </>
       )}
 
-      {saltoRaro && previo !== null && (
+      {saltoArriba && previo !== null && (
         <div className="mt-6 flex gap-3 rounded-2xl border border-win-200 bg-win-100/70 p-4">
           <span className="mt-0.5 shrink-0 text-win-600">
             <IconoAviso />
@@ -129,6 +133,23 @@ export function ResultadoPunto({
           </p>
         </div>
       )}
+
+      {saltoAbajo && previo !== null && (
+        <div className="mt-6 flex gap-3 rounded-2xl border border-regular/30 bg-regular-bg p-4">
+          <span className="mt-0.5 shrink-0 text-regular">
+            <IconoAviso />
+          </span>
+          <p className="text-sm leading-relaxed text-win-900">
+            <strong className="font-bold">Este número puede estar mal.</strong> Dio{' '}
+            {punto.descarga_mbps.toFixed(1)} Mbps, muy por debajo de los{' '}
+            {previo.toFixed(1)} Mbps que rondan los puntos anteriores de este cuarto. Si vienes de
+            un sitio con mala señal, el wifi de tu equipo tarda hasta medio minuto en recuperar su
+            velocidad, y mientras tanto mide bajo aunque estés parado en un buen lugar. Espera unos
+            segundos sin moverte y toma el punto otra vez.
+          </p>
+        </div>
+      )}
+
     </Pantalla>
   )
 }

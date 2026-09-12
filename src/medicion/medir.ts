@@ -110,6 +110,78 @@ function factorMedicion(): number {
   return Math.min(crudo, FACTOR_MAXIMO)
 }
 
+/**
+ * KB que baja la sonda en cada vuelta para que el semáforo siga la velocidad.
+ *
+ * EL PROBLEMA QUE RESUELVE: indiceEnVivo() sale solo de la latencia de pings de
+ * 3 bytes. Eso funciona cruzando internet, donde un wifi que se cae dispara la
+ * latencia. Pero contra un servidor de la misma red la latencia casi no se
+ * mueve —un ping vuelve en 40 ms aunque el enlace esté agonizando— mientras el
+ * ancho de banda se desploma. Resultado: el semáforo se queda en verde siempre.
+ *
+ * Bajando unos KB de verdad, el semáforo sigue lo que de verdad se degrada.
+ * Cuesta datos, así que por defecto está apagado y solo se enciende donde no
+ * cuestan, igual que VITE_FACTOR_MEDICION:
+ *
+ *   VITE_SONDA_KB=256   en .env.local   (~7.7 MB por minuto de caminata)
+ */
+const KB_SONDA_MAXIMO = 1024
+
+export const KB_SONDA = (() => {
+  const crudo = Number(
+    (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_SONDA_KB,
+  )
+  if (!Number.isFinite(crudo) || crudo <= 0) return 0
+  return Math.min(Math.round(crudo), KB_SONDA_MAXIMO)
+})()
+
+/**
+ * Descarga corta para el semáforo: lee los primeros KB del archivo de prueba y
+ * corta. Devuelve Mbps, o null si falló (que para el semáforo es «sin señal»).
+ */
+export async function sondearDescarga(
+  kb: number,
+  senal?: AbortSignal,
+): Promise<number | null> {
+  const tope = kb * 1024
+  const ctrl = new AbortController()
+  const propagar = () => ctrl.abort()
+  senal?.addEventListener('abort', propagar)
+
+  const t0 = performance.now()
+  try {
+    const res = await fetch(sinCache(URL_DESCARGA, `s${Date.now()}-${Math.random()}`), {
+      cache: 'no-store',
+      signal: ctrl.signal,
+    })
+    if (!res.ok) return null
+
+    const lector = res.body?.getReader()
+    if (lector === undefined) {
+      const bytes = (await res.arrayBuffer()).byteLength
+      const ms = performance.now() - t0
+      return ms > 0 ? (bytes * 8) / (ms / 1000) / 1e6 : null
+    }
+
+    let total = 0
+    for (;;) {
+      const { done, value } = await lector.read()
+      if (done) break
+      if (value !== undefined) total += value.byteLength
+      if (total >= tope) break
+    }
+    // Cortar la respuesta a medio camino: no se baja el archivo entero.
+    ctrl.abort()
+
+    const ms = performance.now() - t0
+    return total > 0 && ms > 0 ? (total * 8) / (ms / 1000) / 1e6 : null
+  } catch {
+    return null
+  } finally {
+    senal?.removeEventListener('abort', propagar)
+  }
+}
+
 function ampliar(op: Opciones, factor: number): Opciones {
   if (factor === 1) return op
   return {

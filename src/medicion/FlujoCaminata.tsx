@@ -4,7 +4,14 @@ import { filasDeMediciones } from '../mapa/filas'
 import { ArbolCobertura } from '../mapa/ArbolCobertura'
 import { Boton } from '../ui/Boton'
 import { Pantalla } from '../ui/Pantalla'
-import { type Parada, clave, consolidar, etiquetaDeCuarto, megasGastadas } from './caminata'
+import {
+  type Parada,
+  clave,
+  consolidar,
+  etiquetaDeCuarto,
+  mediana,
+  megasGastadas,
+} from './caminata'
 import { limpiar } from './cuartos'
 import { detectarDispositivo, sabeDistinguirConexion } from './dispositivo'
 import {
@@ -22,7 +29,7 @@ import { ResultadoPunto } from './partes/ResultadoPunto'
 import { Medidor } from './partes/Medidor'
 import { PasoConexion } from './partes/PasoConexion'
 import { SelectorUbicacion } from './partes/SelectorUbicacion'
-import { indiceEnVivo } from './senal'
+import { indiceDeCobertura, indiceEnVivo } from './senal'
 import { iniciarSonda } from './sonda'
 import { useWakeLock } from './useWakeLock'
 
@@ -56,6 +63,8 @@ export function FlujoCaminata({
   const [paradas, setParadas] = useState<Parada[]>([])
   const [recorrido, setRecorrido] = useState<MuestraRecorrido[]>([])
   const [ultimas, setUltimas] = useState<(number | null)[]>([])
+  /** Mbps de la sonda. Vacío si VITE_SONDA_KB está apagado. */
+  const [ultimasMbps, setUltimasMbps] = useState<(number | null)[]>([])
   const [progreso, setProgreso] = useState<Progreso | null>(null)
   const [midiendoEtiqueta, setMidiendoEtiqueta] = useState('')
   const [avisoCache, setAvisoCache] = useState(false)
@@ -90,7 +99,6 @@ export function FlujoCaminata({
     return puntos.reduce((a, p) => a + p.latencia_ms, 0) / puntos.length
   }, [referencia])
 
-  const indiceVivo = indiceEnVivo(ultimas.slice(-VENTANA_VIVO), latenciaReferencia)
   const mediciones = useMemo(() => consolidar(paradas), [paradas])
   /** La referencia ya consolidada: contra ella se calcula el % de cada punto. */
   const datosReferencia = useMemo(
@@ -99,12 +107,42 @@ export function FlujoCaminata({
   )
   const filas = useMemo(() => filasDeMediciones(mediciones), [mediciones])
 
+  /*
+   * El semáforo, con dos modos según lo que la sonda pueda medir.
+   *
+   * Con VITE_SONDA_KB encendido la sonda baja datos, así que se usa la MISMA
+   * fórmula que un punto medido (indiceDeCobertura) sobre la mediana de las
+   * últimas muestras: el semáforo y el número firme hablan el mismo idioma.
+   *
+   * Apagado, se cae a indiceEnVivo, que sale solo de la latencia. Es lo que
+   * había y sirve cruzando internet, donde la latencia sí se dispara cuando el
+   * wifi se cae. Contra un servidor de la misma red se queda en verde siempre.
+   */
+  const indiceVivo = useMemo(() => {
+    const mbps = ultimasMbps.slice(-VENTANA_VIVO).filter((x): x is number => x !== null)
+    if (mbps.length === 0) return indiceEnVivo(ultimas.slice(-VENTANA_VIVO), latenciaReferencia)
+
+    const lat = ultimas.slice(-VENTANA_VIVO).filter((x): x is number => x !== null)
+    const perdidos = ultimasMbps.slice(-VENTANA_VIVO).filter((x) => x === null).length
+    return indiceDeCobertura(
+      {
+        descarga_mbps: mediana(mbps),
+        latencia_ms: lat.length > 0 ? mediana(lat) : 0,
+        jitter_ms: 0,
+        perdida_pct: (perdidos / ultimasMbps.slice(-VENTANA_VIVO).length) * 100,
+      },
+      datosReferencia,
+    )
+  }, [ultimas, ultimasMbps, latenciaReferencia, datosReferencia])
+
+
   /* La sonda solo corre mientras se camina: durante una medición competiría con
      la descarga y ensuciaría las dos cosas. */
   useEffect(() => {
     if (paso !== 'caminata') return
-    const sonda = iniciarSonda(MS_ENTRE_PINGS, (ms) => {
+    const sonda = iniciarSonda(MS_ENTRE_PINGS, ({ latencia_ms: ms, mbps }) => {
       setUltimas((prev) => [...prev, ms].slice(-24))
+      setUltimasMbps((prev) => [...prev, mbps].slice(-24))
       setRecorrido((prev) =>
         [
           ...prev,

@@ -83,8 +83,8 @@ export function IndicadorSenal({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-gray-500">
-        Medido con pings reales a internet, no con la potencia del radio: ningún navegador la
-        expone. El número firme de cada punto sale al pulsar «Tomar punto aquí».
+        Medido con tráfico real, no con la potencia del radio: ningún navegador la expone. El
+        número firme de cada punto sale al pulsar «Tomar punto aquí».
       </p>
     </div>
   )

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import type { CuartoReporte, Estado, Reporte as TipoReporte, Sesion } from '../contrato'
+import { pctMostrable } from '../medicion/senal'
 import { Boton } from '../ui/Boton'
 import { Insignia } from '../ui/Insignia'
 import { Pantalla } from '../ui/Pantalla'
@@ -19,7 +20,7 @@ const TITULO_GENERAL: Record<Estado, string> = {
 
 function FilaCuarto({ cuarto, sesion }: { cuarto: CuartoReporte; sesion: Sesion }) {
   const medicion = sesion.mediciones.find((m) => m.cuarto === cuarto.cuarto)
-  const pct = cuarto.velocidad_vs_plan_pct
+  const pct = pctMostrable(cuarto.velocidad_vs_plan_pct)
   return (
     <li className="rounded-2xl bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">

@@ -6,12 +6,12 @@
  * fast refresh de Vite.
  */
 import type { Medicion } from '../contrato.ts'
-import { indiceDeCobertura, porcentajeVsReferencia } from '../medicion/senal.ts'
+import { indiceDeCobertura, pctMostrable, porcentajeVsReferencia } from '../medicion/senal.ts'
 import type { FilaMapa } from './ArbolCobertura'
 
 function detalleDe(m: Medicion, referencia: Medicion | null): string {
   if (m.error !== undefined) return 'El dispositivo no logró conectarse en este punto'
-  const pct = porcentajeVsReferencia(m, referencia)
+  const pct = pctMostrable(porcentajeVsReferencia(m, referencia))
   const partes = [`${m.descarga_mbps.toFixed(1)} Mbps`, `${m.latencia_ms} ms`]
   if (pct !== null && !m.es_referencia) partes.push(`${pct}% de lo que da el router`)
   return partes.join(' · ')

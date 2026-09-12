@@ -41,7 +41,12 @@ function estadoDeCuarto(m: Medicion, planMbps: number | null): { estado: Estado;
 
 function explicacionDeCuarto(m: Medicion, estado: Estado, pct: number | null): string {
   if (m.error !== undefined) return 'El dispositivo no logró conectarse aquí. La señal wifi no llega a este cuarto.'
-  const base = pct !== null ? `Llega ${pct}% de la velocidad de tu plan.` : `Se midieron ${m.descarga_mbps} Mbps.`
+  // Techo en 100: «llega el 310% de tu plan» no le dice nada al cliente.
+  const visible = pct === null ? null : Math.min(100, pct)
+  const base =
+    visible !== null
+      ? `Llega ${visible}% de la velocidad de tu plan.`
+      : `Se midieron ${m.descarga_mbps} Mbps.`
   if (estado === 'bueno') return `${base} Suficiente para cualquier uso normal.`
   if (estado === 'regular') return `${base} Alcanza para lo básico, pero puede fallar con varios dispositivos conectados o videollamadas.`
   return `${base} Muy por debajo de lo esperado: videos y videollamadas se van a cortar.`

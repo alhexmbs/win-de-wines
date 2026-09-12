@@ -118,6 +118,22 @@ export function porcentajeVsReferencia(
   return Math.round((m.descarga_mbps / referencia.descarga_mbps) * 100)
 }
 
+/**
+ * El porcentaje tal como se le muestra al cliente, con techo en 100.
+ *
+ * POR QUÉ: el porcentaje crudo no tiene techo, y pasar de 100 es normal — basta
+ * con que un cuarto mida un poco más rápido que la referencia, cosa que ocurre
+ * sola por la varianza entre dos mediciones. Pero «llega el 130% de lo que da
+ * tu router» no significa nada para quien lo lee: la referencia ES el techo de
+ * la casa por definición. Arriba de 100 la única lectura útil es «llega todo».
+ *
+ * El número crudo NO se toca: sigue viajando en el contrato y se ve entero en
+ * el detalle técnico. Esto es solo presentación.
+ */
+export function pctMostrable(pct: number | null): number | null {
+  return pct === null ? null : Math.min(100, pct)
+}
+
 /* ─────────────── semáforo en vivo mientras camina ─────────────── */
 
 /** Sin referencia de latencia, este ida y vuelta al CDN ya se considera bueno. */
