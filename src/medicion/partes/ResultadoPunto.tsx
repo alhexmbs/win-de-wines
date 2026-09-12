@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Punto } from '../../contrato'
 import { Boton } from '../../ui/Boton'
 import { IconoAviso } from '../../ui/Iconos'
@@ -46,6 +47,7 @@ export function ResultadoPunto({
   referencia,
   onGuardar,
   onDescartar,
+  extra,
 }: {
   /** Nombre del cuarto tal como se va a guardar. Es el dato que hay que revisar. */
   etiqueta: string
@@ -57,6 +59,8 @@ export function ResultadoPunto({
   referencia: DatosSenal | null
   onGuardar: () => void
   onDescartar: () => void
+  /** Algo más al final de la pantalla: la caminata sobre plano pone aquí las rayitas. */
+  extra?: ReactNode
 }) {
   const fallo = punto.error !== undefined
   const pct = fallo ? null : pctMostrable(porcentajeVsReferencia(punto, referencia))
@@ -150,6 +154,7 @@ export function ResultadoPunto({
         </div>
       )}
 
+      {extra}
     </Pantalla>
   )
 }

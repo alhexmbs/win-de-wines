@@ -6,7 +6,9 @@ import { crearSesion, nuevoSesionId } from '../contrato'
 import { Boton } from '../ui/Boton'
 import { Pantalla } from '../ui/Pantalla'
 import { MapaCalor } from '../mapa/MapaCalor'
-import { FlujoCaminata as FlujoMedicion } from './FlujoCaminata'
+import { FlujoPlano } from '../plano/FlujoPlano'
+import { LabPlano } from '../plano/LabPlano'
+import { FlujoCaminata } from './FlujoCaminata'
 
 /**
  * Banco de pruebas de F1. No es parte de la app: es mi página para abrir en el
@@ -18,6 +20,14 @@ import { FlujoCaminata as FlujoMedicion } from './FlujoCaminata'
  * Ojo: por LAN (http://192.168.x.x) el Wake Lock no funciona, porque no es
  * contexto seguro. Para probar eso hace falta el preview de Vercel en https.
  */
+
+const parametros = new URLSearchParams(window.location.search)
+
+/**
+ * Qué prueba el lab. Sin nada, lo mismo que usa la app (la caminata sobre
+ * plano); ?caminata, el respaldo sin plano; ?plano, el editor del esquema solo.
+ */
+const FlujoMedicion = parametros.has('caminata') ? FlujoCaminata : FlujoPlano
 
 /** Contexto de mentira, solo para poder armar una Sesion comparable con los mocks. */
 const CONTEXTO_FALSO: Contexto = { plan_mbps: 200, tipo_vivienda: 'casa', pisos: 2 }
@@ -126,8 +136,9 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   )
 }
 
+/** lab.html?plano abre el banco de pruebas del esquema de la vivienda en vez del de medición. */
+const modoPlano = parametros.has('plano')
+
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Lab />
-  </StrictMode>,
+  <StrictMode>{modoPlano ? <LabPlano /> : <Lab />}</StrictMode>,
 )

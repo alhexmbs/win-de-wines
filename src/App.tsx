@@ -12,13 +12,15 @@ import { Onboarding } from './pantallas/Onboarding'
 import { Reporte } from './pantallas/Reporte'
 
 /**
- * Modo caminata (mapa de cobertura): semáforo en vivo, piso + habitación y
- * varios puntos por cuarto. Respaldos con las mismas props, por si algo falla
- * en la demo — se cambia solo esta línea:
+ * Caminata sobre plano: la caminata de siempre (semáforo en vivo, varios puntos
+ * por cuarto) con cada punto ubicado en un esquema de la casa que la app arma
+ * sola. Respaldos con las mismas props, por si algo falla en la demo — se cambia
+ * solo esta línea:
+ *   { FlujoCaminata as FlujoMedicion } from './medicion/FlujoCaminata'  (sin plano)
  *   ./medicion/FlujoMedicion            (día 1: un punto por cuarto, sin mapa)
  *   ./dobles/FlujoMedicionFalso         (sin medir nada, escenarios de prueba)
  */
-import { FlujoCaminata as FlujoMedicion } from './medicion/FlujoCaminata'
+import { FlujoPlano as FlujoMedicion } from './plano/FlujoPlano'
 import { MapaCalor } from './mapa/MapaCalor'
 
 type Paso =

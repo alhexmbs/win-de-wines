@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CUARTOS_SUGERIDOS, limpiar } from '../cuartos'
+import { CUARTOS_SUGERIDOS } from '../cuartos'
 import { PISO_MAXIMO } from '../caminata'
 import { IconoMas } from '../../ui/Iconos'
 
@@ -121,7 +121,7 @@ export function SelectorUbicacion({
           autoFocus
           type="text"
           value={esDeLaLista ? '' : cuarto}
-          onChange={(e) => onCambiarCuarto(limpiar(e.target.value))}
+          onChange={(e) => onCambiarCuarto(e.target.value)}
           placeholder="¿Cómo le dices a este cuarto?"
           maxLength={40}
           className="mt-3 w-full rounded-2xl border-2 border-win-200 bg-white px-4 py-3 text-win-900 outline-none focus:border-win-500"

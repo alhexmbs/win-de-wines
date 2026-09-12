@@ -119,9 +119,11 @@ recibe el contexto del onboarding ni ve el reporte.
 
 ## Modo caminata y mapa de cobertura
 
-El flujo del día 1 (`FlujoMedicion`) sigue en pie como respaldo, pero la app
-ahora usa `FlujoCaminata`: piso + habitación, varios puntos por cuarto, semáforo
-en vivo con pings de 3 bytes y mapa de calor al final.
+El flujo del día 1 (`FlujoMedicion`) sigue en pie como respaldo, igual que
+`FlujoCaminata`: piso + habitación, varios puntos por cuarto, semáforo en vivo con
+pings de 3 bytes y mapa de calor al final. La app ahora usa `FlujoPlano`, la misma
+caminata con cada punto ubicado en un esquema de la casa: ver
+**`docs/README-PLANO.md`**.
 
 Todo está documentado en **`docs/README-MAPA.md`**, incluida la respuesta corta
 a "¿y el RSSI en dBm?": no existe API de navegador que lo entregue, así que el

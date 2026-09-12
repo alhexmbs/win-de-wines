@@ -1,0 +1,288 @@
+{
+  "version": "1.1",
+  "sesion_id": "demo-plano",
+  "inicio": "2026-09-12T18:00:00.000Z",
+  "contexto": {
+    "plan_mbps": 200,
+    "tipo_vivienda": "casa",
+    "pisos": 2
+  },
+  "dispositivo": {
+    "conexion": "wifi",
+    "navegador": "Chrome 141 / Android",
+    "conexion_confirmada": true
+  },
+  "mediciones": [
+    {
+      "cuarto": "Sala (junto al router)",
+      "es_referencia": true,
+      "timestamp": "2026-09-12T18:01:00.000Z",
+      "descarga_mbps": 150,
+      "latencia_ms": 13,
+      "jitter_ms": 6,
+      "perdida_pct": 0,
+      "muestras": 2,
+      "piso": 1,
+      "puntos": [
+        {
+          "timestamp": "2026-09-12T18:01:00.000Z",
+          "descarga_mbps": 152,
+          "latencia_ms": 12,
+          "jitter_ms": 5,
+          "perdida_pct": 0,
+          "bytes": 20971520,
+          "senal_declarada": {
+            "barras": 4,
+            "maximo": 4
+          },
+          "habitacion_id": "h1",
+          "x": 0.91,
+          "y": 5.04,
+          "indice": 100
+        },
+        {
+          "timestamp": "2026-09-12T18:02:00.000Z",
+          "descarga_mbps": 148,
+          "latencia_ms": 13,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "habitacion_id": "h1",
+          "x": 1.6,
+          "y": 3.37,
+          "indice": 100
+        }
+      ],
+      "indice": 100,
+      "habitacion_id": "h1",
+      "bytes_descargados": 24117248
+    },
+    {
+      "cuarto": "Dormitorio",
+      "es_referencia": false,
+      "timestamp": "2026-09-12T18:03:00.000Z",
+      "descarga_mbps": 100,
+      "latencia_ms": 20,
+      "jitter_ms": 8,
+      "perdida_pct": 0,
+      "muestras": 2,
+      "piso": 1,
+      "puntos": [
+        {
+          "timestamp": "2026-09-12T18:03:00.000Z",
+          "descarga_mbps": 104,
+          "latencia_ms": 18,
+          "jitter_ms": 7,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "senal_declarada": {
+            "barras": 4,
+            "maximo": 4
+          },
+          "habitacion_id": "h4",
+          "x": 1.5,
+          "y": 1.5,
+          "indice": 98
+        },
+        {
+          "timestamp": "2026-09-12T18:04:00.000Z",
+          "descarga_mbps": 96,
+          "latencia_ms": 21,
+          "jitter_ms": 8,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "habitacion_id": "h4",
+          "x": 0.91,
+          "y": 2.04,
+          "indice": 92
+        }
+      ],
+      "indice": 95,
+      "habitacion_id": "h4",
+      "bytes_descargados": 6291456
+    },
+    {
+      "cuarto": "Baño",
+      "es_referencia": false,
+      "timestamp": "2026-09-12T18:05:00.000Z",
+      "descarga_mbps": 55,
+      "latencia_ms": 34,
+      "jitter_ms": 14,
+      "perdida_pct": 0,
+      "muestras": 1,
+      "piso": 1,
+      "puntos": [
+        {
+          "timestamp": "2026-09-12T18:05:00.000Z",
+          "descarga_mbps": 55,
+          "latencia_ms": 34,
+          "jitter_ms": 14,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "senal_declarada": {
+            "barras": 3,
+            "maximo": 4
+          },
+          "habitacion_id": "h7",
+          "x": 1.5,
+          "y": 7.5,
+          "indice": 64
+        }
+      ],
+      "indice": 64,
+      "habitacion_id": "h7",
+      "bytes_descargados": 3145728
+    },
+    {
+      "cuarto": "Dormitorio (piso 2)",
+      "es_referencia": false,
+      "timestamp": "2026-09-12T18:06:00.000Z",
+      "descarga_mbps": 20,
+      "latencia_ms": 125,
+      "jitter_ms": 59,
+      "perdida_pct": 12.5,
+      "muestras": 2,
+      "piso": 2,
+      "puntos": [
+        {
+          "timestamp": "2026-09-12T18:06:00.000Z",
+          "descarga_mbps": 22,
+          "latencia_ms": 118,
+          "jitter_ms": 55,
+          "perdida_pct": 12.5,
+          "bytes": 3145728,
+          "senal_declarada": {
+            "barras": 1,
+            "maximo": 4
+          },
+          "habitacion_id": "h9",
+          "x": 1.5,
+          "y": 1.5,
+          "indice": 23
+        },
+        {
+          "timestamp": "2026-09-12T18:07:00.000Z",
+          "descarga_mbps": 18,
+          "latencia_ms": 131,
+          "jitter_ms": 62,
+          "perdida_pct": 12.5,
+          "bytes": 3145728,
+          "habitacion_id": "h9",
+          "x": 0.91,
+          "y": 2.04,
+          "indice": 18
+        }
+      ],
+      "indice": 21,
+      "habitacion_id": "h9",
+      "bytes_descargados": 6291456
+    },
+    {
+      "cuarto": "Baño (piso 2)",
+      "es_referencia": false,
+      "timestamp": "2026-09-12T18:08:00.000Z",
+      "descarga_mbps": 5,
+      "latencia_ms": 262,
+      "jitter_ms": 108,
+      "perdida_pct": 25,
+      "muestras": 1,
+      "piso": 2,
+      "puntos": [
+        {
+          "timestamp": "2026-09-12T18:08:00.000Z",
+          "descarga_mbps": 5,
+          "latencia_ms": 262,
+          "jitter_ms": 108,
+          "perdida_pct": 25,
+          "bytes": 3145728,
+          "senal_declarada": {
+            "barras": 1,
+            "maximo": 4
+          },
+          "habitacion_id": "h12",
+          "x": 1.5,
+          "y": 7.5,
+          "indice": 3
+        }
+      ],
+      "indice": 3,
+      "habitacion_id": "h12",
+      "bytes_descargados": 3145728
+    }
+  ],
+  "plano": {
+    "pisos": [
+      {
+        "numero": 1,
+        "nombre": "Piso 1"
+      },
+      {
+        "numero": 2,
+        "nombre": "Piso 2"
+      }
+    ],
+    "habitaciones": [
+      {
+        "id": "h1",
+        "piso": 1,
+        "nombre": "Sala",
+        "x": 0,
+        "y": 3,
+        "ancho": 3,
+        "alto": 3
+      },
+      {
+        "id": "h4",
+        "piso": 1,
+        "nombre": "Dormitorio",
+        "x": 0,
+        "y": 0,
+        "ancho": 3,
+        "alto": 3
+      },
+      {
+        "id": "h7",
+        "piso": 1,
+        "nombre": "Baño",
+        "x": 0,
+        "y": 6,
+        "ancho": 3,
+        "alto": 3
+      },
+      {
+        "id": "h9",
+        "piso": 2,
+        "nombre": "Dormitorio",
+        "x": 0,
+        "y": 0,
+        "ancho": 3,
+        "alto": 3
+      },
+      {
+        "id": "h12",
+        "piso": 2,
+        "nombre": "Baño",
+        "x": 0,
+        "y": 6,
+        "ancho": 3,
+        "alto": 3
+      },
+      {
+        "id": "h14",
+        "piso": 2,
+        "nombre": "Pasillo",
+        "x": 0,
+        "y": 3,
+        "ancho": 3,
+        "alto": 3
+      }
+    ],
+    "router": {
+      "piso": 1,
+      "habitacion_id": "h1",
+      "x": 1.5,
+      "y": 4.5
+    },
+    "disposicion": "usuario"
+  }
+}

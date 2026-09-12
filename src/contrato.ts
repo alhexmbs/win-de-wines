@@ -31,6 +31,21 @@ export interface Dispositivo {
 }
 
 /**
+ * Intensidad del wifi tal como el usuario la ve en el ícono de su celular.
+ *
+ * DECLARADA, NO MEDIDA: ningún navegador expone el RSSI, así que la única forma
+ * de tener este dato es preguntarlo. Es auxiliar: no entra en el índice ni pinta
+ * el mapa. Sirve para contrastar — «rayitas llenas pero velocidad baja» apunta a
+ * algo distinto de la cobertura. Ausente = el usuario no la indicó.
+ */
+export interface SenalDeclarada {
+  /** Rayitas encendidas. 0 = ícono vacío o tachado. */
+  barras: number
+  /** Rayitas que tiene el ícono en ese equipo: suelen ser 3 en iPhone y 4 en Android. */
+  maximo: number
+}
+
+/**
  * Un punto suelto medido dentro de una habitación. Varios puntos en el mismo
  * cuarto = resultado más confiable (el wifi cambia dentro de un mismo cuarto:
  * junto a la ventana no es lo mismo que detrás del refrigerador).
@@ -46,6 +61,13 @@ export interface Punto {
   /** Datos gastados en este punto. Se suman para el contador de la caminata. */
   bytes?: number
   error?: string
+  /* Los cuatro de abajo solo existen en la caminata sobre plano. */
+  /** Habitación del Plano donde se tomó. */
+  habitacion_id?: string
+  /** Posición aproximada en metros dentro del piso. Declarada: el usuario la marca. */
+  x?: number
+  y?: number
+  senal_declarada?: SenalDeclarada
 }
 
 /**
@@ -86,6 +108,54 @@ export interface Medicion {
   puntos?: Punto[]
   /** 0-100 vs la referencia junto al router. Es lo que pinta el mapa de calor. */
   indice?: number
+  /** Habitación del Plano. La etiqueta `cuarto` sigue siendo la que usan B y C. */
+  habitacion_id?: string
+}
+
+/**
+ * Esquema de la vivienda para la caminata sobre plano. NO es un plano a escala:
+ * la app lo arma sola (habitaciones de 3×3 m en grilla) y el usuario puede
+ * acomodarlo si quiere, pero nunca está obligado a dibujar.
+ *
+ * Metros aproximados, origen arriba a la izquierda de cada piso, `y` crece
+ * hacia abajo (igual que SVG). Todo lo que hay aquí es DECLARADO, no medido.
+ */
+export interface Plano {
+  pisos: PisoPlano[]
+  habitaciones: Habitacion[]
+  /** null = todavía no se marcó dónde está el router. */
+  router: UbicacionRouter | null
+  /**
+   * 'auto' = el esquema lo armó la app; 'usuario' = alguien movió o cambió el
+   * tamaño de una habitación. Con 'auto' qué cuarto está al lado de cuál no es
+   * confiable, y cualquier recomendación que dependa de eso debe decirlo.
+   */
+  disposicion: 'auto' | 'usuario'
+}
+
+export interface PisoPlano {
+  /** Identifica y ordena el piso. 1 = planta baja, igual que Medicion.piso. */
+  numero: number
+  nombre: string
+}
+
+export interface Habitacion {
+  id: string
+  piso: number
+  nombre: string
+  /** Rectángulo en metros. El centro se deriva, no se guarda. */
+  x: number
+  y: number
+  ancho: number
+  alto: number
+}
+
+/** Los puntos de la habitación del router son la referencia de toda la casa. */
+export interface UbicacionRouter {
+  piso: number
+  habitacion_id: string
+  x: number
+  y: number
 }
 
 /** Lo único que A entrega al terminar la caminata. */
@@ -94,6 +164,8 @@ export interface ResultadoMedicion {
   mediciones: Medicion[]
   /** Pings continuos de la caminata. Solo alimenta el mapa; B puede ignorarlo. */
   recorrido?: MuestraRecorrido[]
+  /** Solo en la caminata sobre plano. B puede ignorarlo: `mediciones` no cambia. */
+  plano?: Plano
 }
 
 /* ───────────── C — onboarding + armado ───────────── */
@@ -115,6 +187,8 @@ export interface Sesion {
   mediciones: Medicion[]
   /** Pings de la caminata. Opcional: las sesiones del día 1 no lo traen. */
   recorrido?: MuestraRecorrido[]
+  /** Esquema de la vivienda. Opcional: solo lo trae la caminata sobre plano. */
+  plano?: Plano
 }
 
 /* ───────────── B — src/diagnostico/ + api/reporte.ts ───────────── */
@@ -193,5 +267,6 @@ export function crearSesion(
     dispositivo: resultado.dispositivo,
     mediciones: resultado.mediciones,
     ...(resultado.recorrido === undefined ? {} : { recorrido: resultado.recorrido }),
+    ...(resultado.plano === undefined ? {} : { plano: resultado.plano }),
   }
 }

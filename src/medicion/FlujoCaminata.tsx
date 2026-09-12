@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Dispositivo, MuestraRecorrido, Punto, ResultadoMedicion } from '../contrato'
+import { useCallback, useMemo, useState } from 'react'
+import type { Dispositivo, Punto, ResultadoMedicion } from '../contrato'
 import { filasDeMediciones } from '../mapa/filas'
 import { ArbolCobertura } from '../mapa/ArbolCobertura'
 import { Boton } from '../ui/Boton'
@@ -11,38 +11,25 @@ import {
   clave,
   consolidar,
   etiquetaDeCuarto,
-  mediana,
   megasGastadas,
 } from './caminata'
 import { limpiar } from './cuartos'
-import { detectarDispositivo, sabeDistinguirConexion } from './dispositivo'
-import {
-  AHORRO,
-  NORMAL,
-  PUNTO_AHORRO_EFECTIVO,
-  PUNTO_EFECTIVO,
-  type Opciones,
-  type Progreso,
-  medirCuarto,
-} from './medir'
+import { datosDeRedFrescos, detectarDispositivo, sabeDistinguirConexion } from './dispositivo'
+import { AHORRO, NORMAL, PUNTO_AHORRO_EFECTIVO, PUNTO_EFECTIVO, type Opciones } from './medir'
 import { IndicadorSenal } from './partes/IndicadorSenal'
 import { PuntosTomados } from './partes/PuntosTomados'
 import { ResultadoPunto } from './partes/ResultadoPunto'
 import { Medidor } from './partes/Medidor'
 import { PasoConexion } from './partes/PasoConexion'
 import { SelectorUbicacion } from './partes/SelectorUbicacion'
-import { indiceDeCobertura, indiceEnVivo } from './senal'
-import { iniciarSonda } from './sonda'
+import { useMedirPunto } from './useMedirPunto'
+import { useSondaEnVivo } from './useSondaEnVivo'
 import { useWakeLock } from './useWakeLock'
 
 type Paso = 'conexion' | 'referencia' | 'caminata' | 'midiendo' | 'resultado'
 
 /** Referencia + al menos otra habitación: con una sola no hay nada que comparar. */
 const MINIMO_HABITACIONES = 2
-const MS_ENTRE_PINGS = 2000
-/** Cuántos pings recientes pesan en el semáforo. 6 ≈ los últimos 12 segundos. */
-const VENTANA_VIVO = 6
-const MAX_RECORRIDO = 600
 
 /**
  * Modo caminata: el usuario recorre su casa, el semáforo se mueve en vivo con
@@ -51,6 +38,9 @@ const MAX_RECORRIDO = 600
  *
  * Frontera igual que el día 1: no recibe el contexto del onboarding ni ve el
  * reporte. Entrega dispositivo + mediciones (+ recorrido) y C arma la Sesion.
+ *
+ * Hoy es el respaldo de la caminata sobre plano (src/plano/FlujoPlano.tsx), con
+ * las mismas props. Medir un punto y el semáforo viven en hooks compartidos.
  */
 export function FlujoCaminata({
   onTerminar,
@@ -65,14 +55,6 @@ export function FlujoCaminata({
   const [pisos, setPisos] = useState<number[]>(PISOS_INICIALES)
   const [cuarto, setCuarto] = useState('Sala')
   const [paradas, setParadas] = useState<Parada[]>([])
-  const [recorrido, setRecorrido] = useState<MuestraRecorrido[]>([])
-  const [ultimas, setUltimas] = useState<(number | null)[]>([])
-  /** Mbps de la sonda. Vacío si VITE_SONDA_KB está apagado. */
-  const [ultimasMbps, setUltimasMbps] = useState<(number | null)[]>([])
-  const [progreso, setProgreso] = useState<Progreso | null>(null)
-  const [midiendoEtiqueta, setMidiendoEtiqueta] = useState('')
-  const [avisoCache, setAvisoCache] = useState(false)
-  const [bytes, setBytes] = useState(0)
   /*
    * El punto recién medido, todavía sin guardar. Lleva consigo el piso y el
    * cuarto con los que se midió: si el usuario cambia el selector mientras mira
@@ -85,16 +67,17 @@ export function FlujoCaminata({
     esReferencia: boolean
   } | null>(null)
 
-  const cancelar = useRef<AbortController | null>(null)
+  /* Medir un punto (progreso, datos gastados, aviso de caché) vive en el hook,
+     para que la caminata sobre plano mida exactamente igual. */
+  const {
+    progreso,
+    etiqueta: midiendoEtiqueta,
+    avisoCache,
+    bytes,
+    medir,
+    cancelar,
+  } = useMedirPunto(opciones)
   const wakeLock = useWakeLock(paso === 'caminata' || paso === 'midiendo')
-
-  // La ubicación actual vive en un ref para que la sonda, que corre en su propio
-  // bucle, etiquete cada ping con el cuarto donde el usuario está AHORA sin
-  // tener que reiniciarse en cada cambio de cuarto.
-  const ubicacion = useRef({ piso, cuarto })
-  useEffect(() => {
-    ubicacion.current = { piso, cuarto }
-  }, [piso, cuarto])
 
   const referencia = paradas.find((p) => p.es_referencia) ?? null
   const latenciaReferencia = useMemo(() => {
@@ -111,112 +94,36 @@ export function FlujoCaminata({
   )
   const filas = useMemo(() => filasDeMediciones(mediciones), [mediciones])
 
-  /*
-   * El semáforo, con dos modos según lo que la sonda pueda medir.
-   *
-   * Con VITE_SONDA_KB encendido la sonda baja datos, así que se usa la MISMA
-   * fórmula que un punto medido (indiceDeCobertura) sobre la mediana de las
-   * últimas muestras: el semáforo y el número firme hablan el mismo idioma.
-   *
-   * Apagado, se cae a indiceEnVivo, que sale solo de la latencia. Es lo que
-   * había y sirve cruzando internet, donde la latencia sí se dispara cuando el
-   * wifi se cae. Contra un servidor de la misma red se queda en verde siempre.
-   */
-  const indiceVivo = useMemo(() => {
-    const mbps = ultimasMbps.slice(-VENTANA_VIVO).filter((x): x is number => x !== null)
-    if (mbps.length === 0) return indiceEnVivo(ultimas.slice(-VENTANA_VIVO), latenciaReferencia)
-
-    const lat = ultimas.slice(-VENTANA_VIVO).filter((x): x is number => x !== null)
-    const perdidos = ultimasMbps.slice(-VENTANA_VIVO).filter((x) => x === null).length
-    return indiceDeCobertura(
-      {
-        descarga_mbps: mediana(mbps),
-        latencia_ms: lat.length > 0 ? mediana(lat) : 0,
-        jitter_ms: 0,
-        perdida_pct: (perdidos / ultimasMbps.slice(-VENTANA_VIVO).length) * 100,
-      },
-      datosReferencia,
-    )
-  }, [ultimas, ultimasMbps, latenciaReferencia, datosReferencia])
-
-
-  /* La sonda solo corre mientras se camina: durante una medición competiría con
-     la descarga y ensuciaría las dos cosas. */
-  useEffect(() => {
-    if (paso !== 'caminata') return
-    const sonda = iniciarSonda(MS_ENTRE_PINGS, ({ latencia_ms: ms, mbps }) => {
-      setUltimas((prev) => [...prev, ms].slice(-24))
-      setUltimasMbps((prev) => [...prev, mbps].slice(-24))
-      setRecorrido((prev) =>
-        [
-          ...prev,
-          {
-            t: new Date().toISOString(),
-            cuarto: ubicacion.current.cuarto,
-            piso: ubicacion.current.piso,
-            latencia_ms: ms,
-          },
-        ].slice(-MAX_RECORRIDO),
-      )
-    })
-    return () => sonda.detener()
-  }, [paso])
-
-  useEffect(() => () => cancelar.current?.abort(), [])
+  /* Semáforo en vivo y pings del recorrido. Viven en el hook para que la
+     caminata sobre plano los comparta. */
+  const { indice: indiceVivo, ultimas, recorrido } = useSondaEnVivo({
+    activa: paso === 'caminata',
+    piso,
+    cuarto: limpiar(cuarto),
+    latenciaReferencia,
+    referencia: datosReferencia,
+  })
 
   const tomarPunto = useCallback(
     async (esReferencia: boolean) => {
       const nombre = limpiar(cuarto)
       if (nombre.length < 2) return
 
-      const etiqueta = etiquetaDeCuarto(piso, nombre, esReferencia)
-      const ctrl = new AbortController()
-      cancelar.current = ctrl
-
-      setMidiendoEtiqueta(etiqueta)
-      setProgreso(null)
       setPaso('midiendo')
+      const toma = await medir(etiquetaDeCuarto(piso, nombre, esReferencia), esReferencia)
 
-      const opcionesPunto = esReferencia
-        ? opciones
-        : opciones === AHORRO
-          ? PUNTO_AHORRO_EFECTIVO
-          : PUNTO_EFECTIVO
-
-      try {
-        const { medicion, desdeCache } = await medirCuarto(
-          etiqueta,
-          esReferencia,
-          opcionesPunto,
-          setProgreso,
-          ctrl.signal,
-        )
-        if (ctrl.signal.aborted) return
-
-        const punto: Punto = {
-          timestamp: medicion.timestamp,
-          descarga_mbps: medicion.descarga_mbps,
-          latencia_ms: medicion.latencia_ms,
-          jitter_ms: medicion.jitter_ms,
-          perdida_pct: medicion.perdida_pct,
-          bytes: medicion.bytes_descargados,
-          ...(medicion.error === undefined ? {} : { error: medicion.error }),
-        }
-
-        setAvisoCache(desdeCache)
-        // Los bytes se gastaron aunque después descarte el punto.
-        setBytes((b) => b + (medicion.bytes_descargados ?? 0))
-        setDispositivo((d) => ({ ...d, ...datosDeRedFrescos() }))
-        setPendiente({ punto, piso, cuarto: nombre, esReferencia })
-        setPaso('resultado')
-      } catch {
-        if (!ctrl.signal.aborted) setPaso(esReferencia ? 'referencia' : 'caminata')
-      } finally {
-        cancelar.current = null
-        setProgreso(null)
+      // Al cancelar, cancelarMedicion() ya decidió a qué paso volver.
+      if (toma.estado === 'cancelado') return
+      if (toma.estado === 'error') {
+        setPaso(esReferencia ? 'referencia' : 'caminata')
+        return
       }
+
+      setDispositivo((d) => ({ ...d, ...datosDeRedFrescos() }))
+      setPendiente({ punto: toma.punto, piso, cuarto: nombre, esReferencia })
+      setPaso('resultado')
     },
-    [cuarto, opciones, piso],
+    [cuarto, medir, piso],
   )
 
   function guardarPendiente() {
@@ -243,9 +150,7 @@ export function FlujoCaminata({
   }
 
   function cancelarMedicion() {
-    cancelar.current?.abort()
-    cancelar.current = null
-    setProgreso(null)
+    cancelar()
     setPaso(referencia === null ? 'referencia' : 'caminata')
   }
 
@@ -464,17 +369,4 @@ function quitarPunto(paradas: Parada[], piso: number, cuarto: string, indice: nu
 function quitarCuarto(paradas: Parada[], piso: number, cuarto: string): Parada[] {
   const k = clave(piso, cuarto)
   return paradas.filter((p) => clave(p.piso, p.cuarto) !== k)
-}
-
-/** navigator.connection cambia durante la caminata; nos quedamos con lo último. */
-function datosDeRedFrescos(): Partial<Dispositivo> {
-  const d = detectarDispositivo()
-  const fresco: Partial<Dispositivo> = {
-    effective_type: d.effective_type,
-    downlink_mbps: d.downlink_mbps,
-    rtt_ms: d.rtt_ms,
-    ahorro_datos: d.ahorro_datos,
-  }
-  if (sabeDistinguirConexion()) fresco.conexion = d.conexion
-  return fresco
 }

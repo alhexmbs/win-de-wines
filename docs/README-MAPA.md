@@ -100,6 +100,7 @@ Campos nuevos del contrato, todos opcionales (el contrato solo crece):
 ```bash
 pnpm probar:senal     # calibración del índice sobre los 4 mocks, sin navegador
 pnpm dev              # http://localhost:5173/lab.html → caminata + mapa + JSON
+                      # (hoy abre la caminata sobre plano; ?caminata abre esta, sin plano)
 ```
 
 `mocks/sesion_caminata.json` es una sesión de 2 pisos con varios puntos por
@@ -107,10 +108,14 @@ cuarto, para probar el mapa y el reporte sin caminar.
 
 ## Respaldos para la demo
 
-Si el modo caminata falla en el celular, en `src/App.tsx` se cambia una línea:
+La app ya no usa esta caminata directamente: usa la caminata sobre plano
+(`src/plano/FlujoPlano.tsx`, ver `docs/README-PLANO.md`), que mide igual y ubica
+cada punto en un esquema de la casa. Si falla en el celular, en `src/App.tsx` se
+cambia una línea:
 
 ```tsx
-import { FlujoCaminata as FlujoMedicion } from './medicion/FlujoCaminata'   // actual
+import { FlujoPlano as FlujoMedicion } from './plano/FlujoPlano'            // actual, con plano
+import { FlujoCaminata as FlujoMedicion } from './medicion/FlujoCaminata'   // caminata sin plano
 import { FlujoMedicion } from './medicion/FlujoMedicion'                    // día 1, sin mapa
 import { FlujoMedicionFalso as FlujoMedicion } from './dobles/FlujoMedicionFalso' // sin medir
 ```

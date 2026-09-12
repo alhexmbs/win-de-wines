@@ -17,6 +17,8 @@ export interface Parada {
   cuarto: string
   es_referencia: boolean
   puntos: Punto[]
+  /** Solo en la caminata sobre plano: pasa tal cual a Medicion.habitacion_id. */
+  habitacion_id?: string
 }
 
 /**
@@ -121,6 +123,7 @@ export function consolidar(paradas: Parada[]): Medicion[] {
     }
 
     if (datos.error !== undefined) medicion.error = datos.error
+    if (parada.habitacion_id !== undefined) medicion.habitacion_id = parada.habitacion_id
 
     const bytes = parada.puntos.reduce((a, p) => a + (p.bytes ?? 0), 0)
     if (bytes > 0) medicion.bytes_descargados = bytes

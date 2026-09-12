@@ -92,3 +92,16 @@ export function detectarDispositivo(): Dispositivo {
 export function sabeDistinguirConexion(): boolean {
   return conexionRed()?.type !== undefined
 }
+
+/** navigator.connection cambia durante la caminata; nos quedamos con lo último. */
+export function datosDeRedFrescos(): Partial<Dispositivo> {
+  const d = detectarDispositivo()
+  const fresco: Partial<Dispositivo> = {
+    effective_type: d.effective_type,
+    downlink_mbps: d.downlink_mbps,
+    rtt_ms: d.rtt_ms,
+    ahorro_datos: d.ahorro_datos,
+  }
+  if (sabeDistinguirConexion()) fresco.conexion = d.conexion
+  return fresco
+}
