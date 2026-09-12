@@ -394,6 +394,16 @@ export function FlujoCaminata({
         </p>
       )}
 
+      {/* Aviso suave, no bloquea nada: con 2-3 puntos la mediana ya es confiable,
+          seguir sumando en el mismo cuarto solo gasta más datos sin cambiar mucho
+          el resultado. */}
+      {puntosAqui >= 3 && (
+        <p className="mt-4 rounded-xl bg-win-100 p-3 text-sm text-win-900">
+          Ya tienes {puntosAqui} puntos en {nombreLimpio}. Con 2 o 3 suele bastar — puedes seguir
+          aquí si quieres más seguridad, o pasar al siguiente cuarto.
+        </p>
+      )}
+
       <p className="mt-7 mb-3 font-semibold text-win-900">¿Dónde estás ahora?</p>
       <SelectorUbicacion
         piso={piso}
