@@ -80,13 +80,28 @@ export function diagnosticar(sesion: Sesion): Reporte {
   const otrosCuartos = cuartos.filter((c) => c.cuarto !== referencia.cuarto)
   const hayCaidaDeCobertura = !fallaEnElOrigen && otrosCuartos.some((c) => c.estado !== 'bueno')
 
+  // Ausente = casa de un piso (ver contrato.ts). El piso viaja en Medicion, no en CuartoReporte.
+  const pisoDe = (cuarto: string): number => mediciones.find((m) => m.cuarto === cuarto)?.piso ?? 1
+  const pisoReferencia = pisoDe(referencia.cuarto)
+  const pisosConProblema = [
+    ...new Set(
+      otrosCuartos
+        .filter((c) => c.estado !== 'bueno')
+        .map((c) => pisoDe(c.cuarto))
+        .filter((p) => p !== pisoReferencia),
+    ),
+  ].sort((a, b) => a - b)
+  const cruzaPiso = hayCaidaDeCobertura && pisosConProblema.length > 0
+
   let causa_probable: string
   if (fallaEnElOrigen) {
     causa_probable =
       'La señal ya llega débil o inestable justo al lado del router. Esto apunta a un problema de la conexión que WIN entrega a la casa, no del wifi interno.'
+  } else if (cruzaPiso) {
+    causa_probable = `Junto al router, en el piso ${pisoReferencia}, la señal es buena, pero no cruza bien hacia el piso ${pisosConProblema.join(' y ')}. Un solo router casi nunca cubre bien más de un piso: los techos y losas de concreto son el obstáculo más difícil de atravesar para el wifi.`
   } else if (hayCaidaDeCobertura) {
     causa_probable =
-      'Junto al router la señal es buena, pero se pierde en otros cuartos. Es un problema de alcance del wifi dentro de la casa (distancia, paredes o pisos entre el router y esos cuartos).'
+      'Junto al router la señal es buena, pero se pierde en otros cuartos del mismo piso. Es un problema de alcance del wifi dentro de la casa (distancia o paredes entre el router y esos cuartos).'
   } else {
     causa_probable = 'No se detectaron problemas relevantes: la señal se mantiene estable en toda la casa.'
   }
@@ -101,8 +116,12 @@ export function diagnosticar(sesion: Sesion): Reporte {
   }
   if (hayCaidaDeCobertura) {
     recomendaciones.push({
-      titulo: 'Repetidor o equipo mesh para los cuartos con mala señal',
-      detalle: 'Un segundo punto de wifi cerca de esos cuartos suele resolver la caída de cobertura.',
+      titulo: cruzaPiso
+        ? `Repetidor o equipo mesh para el piso ${pisosConProblema.join(' y ')}`
+        : 'Repetidor o equipo mesh para los cuartos con mala señal',
+      detalle: cruzaPiso
+        ? 'Un segundo punto de wifi en ese piso resuelve lo que un solo router en otro piso casi nunca cubre.'
+        : 'Un segundo punto de wifi cerca de esos cuartos suele resolver la caída de cobertura.',
       responsable: 'win',
     })
     recomendaciones.push({
