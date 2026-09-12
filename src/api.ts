@@ -2,10 +2,12 @@ import type { Reporte, RespuestaEnvio, Sesion, SolicitudEnvio, Contacto } from '
 import { reporteMockPara } from './mocks'
 
 /**
- * DOBLE #1 — Integración 1: poner esto en true (o VITE_REPORTE_REAL=1) y
- * obtenerReporte() pasa a llamar al endpoint de B. Nada más cambia.
+ * INTEGRACIÓN 1 hecha: obtenerReporte() llama al endpoint real de B.
+ * Para volver al doble (demo sin API, o `vite dev` sin `vercel dev`):
+ * VITE_REPORTE_REAL=0 en .env.local o en Vercel. Es variable de build:
+ * al cambiarla hay que volver a desplegar.
  */
-const USAR_REPORTE_REAL = import.meta.env.VITE_REPORTE_REAL === '1'
+const USAR_REPORTE_REAL = import.meta.env.VITE_REPORTE_REAL !== '0'
 
 const MS_ESPERA_FALSA = 3000
 
@@ -42,7 +44,7 @@ async function postJson<T>(ruta: string, cuerpo: unknown, msTimeout = 45000): Pr
   }
 }
 
-/** B es el dueño de /api/reporte. Mientras no exista, devolvemos un mock. */
+/** B es el dueño de /api/reporte. Con VITE_REPORTE_REAL=0 se usa el mock. */
 export async function obtenerReporte(sesion: Sesion): Promise<Reporte> {
   if (!USAR_REPORTE_REAL) {
     await esperar(MS_ESPERA_FALSA)

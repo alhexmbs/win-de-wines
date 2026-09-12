@@ -30,6 +30,37 @@ export interface Dispositivo {
   ahorro_datos?: boolean
 }
 
+/**
+ * Un punto suelto medido dentro de una habitación. Varios puntos en el mismo
+ * cuarto = resultado más confiable (el wifi cambia dentro de un mismo cuarto:
+ * junto a la ventana no es lo mismo que detrás del refrigerador).
+ */
+export interface Punto {
+  timestamp: string
+  descarga_mbps: number
+  latencia_ms: number
+  jitter_ms: number
+  perdida_pct?: number
+  /** 0-100 vs la medición de referencia junto al router. Ver senal.ts. */
+  indice?: number
+  /** Datos gastados en este punto. Se suman para el contador de la caminata. */
+  bytes?: number
+  error?: string
+}
+
+/**
+ * Ping suelto tomado mientras el usuario camina, para el semáforo en vivo.
+ * No es RSSI: ningún navegador expone la potencia del radio wifi. Es el tiempo
+ * de ida y vuelta a un archivo de 3 bytes, que se degrada donde el wifi flojea.
+ */
+export interface MuestraRecorrido {
+  t: string
+  cuarto: string
+  piso: number
+  /** null = el ping no respondió dentro del timeout. */
+  latencia_ms: number | null
+}
+
 /** Una medición = un cuarto. A produce una por cada parada de la caminata. */
 export interface Medicion {
   cuarto: string
@@ -49,12 +80,20 @@ export interface Medicion {
   duracion_ms?: number
   /** Si el test falló en ese cuarto (sin señal, timeout, etc.). */
   error?: string
+  /** Piso de la vivienda. 1 = planta baja. Ausente = casa de un piso. */
+  piso?: number
+  /** Los puntos individuales que se promediaron para esta medición. */
+  puntos?: Punto[]
+  /** 0-100 vs la referencia junto al router. Es lo que pinta el mapa de calor. */
+  indice?: number
 }
 
 /** Lo único que A entrega al terminar la caminata. */
 export interface ResultadoMedicion {
   dispositivo: Dispositivo
   mediciones: Medicion[]
+  /** Pings continuos de la caminata. Solo alimenta el mapa; B puede ignorarlo. */
+  recorrido?: MuestraRecorrido[]
 }
 
 /* ───────────── C — onboarding + armado ───────────── */
@@ -74,6 +113,8 @@ export interface Sesion {
   contexto: Contexto
   dispositivo: Dispositivo
   mediciones: Medicion[]
+  /** Pings de la caminata. Opcional: las sesiones del día 1 no lo traen. */
+  recorrido?: MuestraRecorrido[]
 }
 
 /* ───────────── B — src/diagnostico/ + api/reporte.ts ───────────── */
@@ -151,5 +192,6 @@ export function crearSesion(
     contexto,
     dispositivo: resultado.dispositivo,
     mediciones: resultado.mediciones,
+    ...(resultado.recorrido === undefined ? {} : { recorrido: resultado.recorrido }),
   }
 }

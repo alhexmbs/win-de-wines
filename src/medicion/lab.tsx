@@ -5,7 +5,8 @@ import type { Contexto, ResultadoMedicion } from '../contrato'
 import { crearSesion, nuevoSesionId } from '../contrato'
 import { Boton } from '../ui/Boton'
 import { Pantalla } from '../ui/Pantalla'
-import { FlujoMedicion } from './FlujoMedicion'
+import { MapaCalor } from '../mapa/MapaCalor'
+import { FlujoCaminata as FlujoMedicion } from './FlujoCaminata'
 
 /**
  * Banco de pruebas de F1. No es parte de la app: es mi página para abrir en el
@@ -83,7 +84,9 @@ function Lab() {
         </>
       }
     >
-      <div className="grid grid-cols-3 gap-2">
+      <MapaCalor sesion={sesion} />
+
+      <div className="mt-6 grid grid-cols-3 gap-2">
         <Dato etiqueta="Cuartos" valor={resultado.mediciones.length.toString()} />
         <Dato
           etiqueta="Con error"

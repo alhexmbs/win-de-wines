@@ -52,6 +52,30 @@ export const AHORRO: Opciones = {
   pings: 6,
 }
 
+/**
+ * Un punto suelto dentro de un cuarto. Como se toman varios por habitación,
+ * cada uno tiene que costar poco: ~3 MB en vez de 20. La referencia junto al
+ * router sí usa NORMAL, porque de ella cuelga la comparación de toda la casa.
+ */
+export const PUNTO: Opciones = {
+  ...NORMAL,
+  topeBytes: 3 * 1024 * 1024,
+  msDescarga: 2200,
+  flujos: 2,
+  pings: 5,
+}
+
+export const PUNTO_AHORRO: Opciones = {
+  ...AHORRO,
+  topeBytes: 1536 * 1024,
+  msDescarga: 1800,
+  flujos: 2,
+  pings: 4,
+}
+
+/** Ping de la sonda continua: 3 bytes, timeout corto, sin gastar datos. */
+export const SONDA: Opciones = { ...NORMAL, pings: 1, msTimeoutPing: 2500 }
+
 export type Fase = 'latencia' | 'descarga'
 
 export interface Progreso {
@@ -142,7 +166,7 @@ export interface ResultadoLatencia {
   respuestas: number
 }
 
-async function unPing(op: Opciones, senal?: AbortSignal): Promise<number | null> {
+export async function pingUnico(op: Opciones, senal?: AbortSignal): Promise<number | null> {
   const { signal, limpiar } = conTimeout(senal, op.msTimeoutPing)
   const inicio = performance.now()
   try {
@@ -168,11 +192,11 @@ export async function medirLatencia(
   let fallidos = 0
 
   // El primer ping abre la conexión TLS y sale carísimo: se descarta.
-  await unPing(op, senal)
+  await pingUnico(op, senal)
 
   for (let i = 0; i < op.pings; i++) {
     if (senal?.aborted === true) throw new DOMException('cancelado', 'AbortError')
-    const ms = await unPing(op, senal)
+    const ms = await pingUnico(op, senal)
     if (ms === null) fallidos++
     else tiempos.push(ms)
 

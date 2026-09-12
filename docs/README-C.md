@@ -48,14 +48,18 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...        # service_role, solo servidor
 
 La tabla está en `docs/supabase.sql`.
 
-## Los dos dobles y cómo se reemplazan (Integración 1)
+## Integración 1 — HECHA
 
-| Doble | Archivo | Reemplazo |
+| Doble | Estado | Cómo volver a él |
 |---|---|---|
-| Flujo de medición (A) | `src/dobles/FlujoMedicionFalso.tsx` | En `src/App.tsx`, cambiar el import por `./medicion/FlujoMedicion`. Mismas props: `onTerminar(resultado: ResultadoMedicion)`. Después se borra la carpeta `src/dobles/`. |
-| Reporte con IA (B) | `obtenerReporte()` en `src/api.ts` | Poner `VITE_REPORTE_REAL=1` en las env vars de Vercel (o cambiar la constante). Pasa a hacer `POST /api/reporte` con `{ sesion }` y espera un `Reporte`. |
+| Flujo de medición (A) | Reemplazado: `src/App.tsx` importa `./medicion/FlujoMedicion`. Mismas props: `onTerminar(resultado: ResultadoMedicion)`. | Cambiar ese import por `./dobles/FlujoMedicionFalso`. El doble se conserva como respaldo de demo. |
+| Reporte con IA (B) | Reemplazado: `obtenerReporte()` hace `POST /api/reporte` con `{ sesion }` y espera un `Reporte`. | `VITE_REPORTE_REAL=0` en `.env.local` o en Vercel. Es variable de build: hay que redesplegar. |
 
-Ninguno de los dos cambios toca el contrato.
+Ninguno de los dos cambios tocó el contrato.
+
+Ojo con `pnpm dev`: Vite no sirve `api/`, así que `/api/reporte` y `/api/enviar`
+dan 404. Para el flujo completo en local hace falta `vercel dev`, o
+`VITE_REPORTE_REAL=0` para quedarse con el reporte mock.
 
 ## Día 2: dónde entran el mapa y el chat
 

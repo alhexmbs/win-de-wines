@@ -12,11 +12,14 @@ import { Onboarding } from './pantallas/Onboarding'
 import { Reporte } from './pantallas/Reporte'
 
 /**
- * INTEGRACIÓN 1 — única línea que cambia para conectar lo de A:
- *   import { FlujoMedicion } from './medicion/FlujoMedicion'
- * y usarlo abajo en lugar de FlujoMedicionFalso. Mismas props.
+ * Modo caminata (mapa de cobertura): semáforo en vivo, piso + habitación y
+ * varios puntos por cuarto. Respaldos con las mismas props, por si algo falla
+ * en la demo — se cambia solo esta línea:
+ *   ./medicion/FlujoMedicion            (día 1: un punto por cuarto, sin mapa)
+ *   ./dobles/FlujoMedicionFalso         (sin medir nada, escenarios de prueba)
  */
-import { FlujoMedicionFalso as FlujoMedicion } from './dobles/FlujoMedicionFalso'
+import { FlujoCaminata as FlujoMedicion } from './medicion/FlujoCaminata'
+import { MapaCalor } from './mapa/MapaCalor'
 
 type Paso =
   | 'bienvenida'
@@ -157,7 +160,7 @@ export default function App() {
           sesion={s.sesion}
           reporte={s.reporte}
           onEnviar={() => setS((prev) => ({ ...prev, paso: 'enviar' }))}
-          /* DÍA 2: mapa={<MapaCalor sesion={s.sesion} reporte={s.reporte} />} */
+          mapa={<MapaCalor sesion={s.sesion} />}
           /* DÍA 2: chat={<Chat sesion={s.sesion} reporte={s.reporte} />} */
         />
       )

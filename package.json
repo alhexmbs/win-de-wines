@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "probar": "node src/diagnostico/probar.ts",
+    "probar:senal": "node src/medicion/probar-senal.ts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

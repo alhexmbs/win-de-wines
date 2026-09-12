@@ -1,0 +1,175 @@
+{
+  "version": "1.1",
+  "sesion_id": "demo-caminata",
+  "inicio": "2026-09-11T18:00:00.000Z",
+  "contexto": {
+    "plan_mbps": 200,
+    "tipo_vivienda": "casa",
+    "pisos": 2
+  },
+  "dispositivo": {
+    "conexion": "wifi",
+    "navegador": "Chrome Android",
+    "conexion_confirmada": true
+  },
+  "mediciones": [
+    {
+      "cuarto": "Sala (junto al router)",
+      "es_referencia": true,
+      "timestamp": "2026-09-11T18:00:00.000Z",
+      "descarga_mbps": 184.5,
+      "latencia_ms": 13,
+      "jitter_ms": 6,
+      "perdida_pct": 0,
+      "muestras": 2,
+      "piso": 1,
+      "puntos": [
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 188,
+          "latencia_ms": 12,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 100
+        },
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 181,
+          "latencia_ms": 13,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 100
+        }
+      ],
+      "indice": 100,
+      "bytes_descargados": 6291456
+    },
+    {
+      "cuarto": "Cocina",
+      "es_referencia": false,
+      "timestamp": "2026-09-11T18:00:00.000Z",
+      "descarga_mbps": 88,
+      "latencia_ms": 25,
+      "jitter_ms": 6,
+      "perdida_pct": 0,
+      "muestras": 3,
+      "piso": 1,
+      "puntos": [
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 96,
+          "latencia_ms": 22,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 81
+        },
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 74,
+          "latencia_ms": 31,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 69
+        },
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 88,
+          "latencia_ms": 25,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 77
+        }
+      ],
+      "indice": 77,
+      "bytes_descargados": 9437184
+    },
+    {
+      "cuarto": "Dormitorio 1",
+      "es_referencia": false,
+      "timestamp": "2026-09-11T18:00:00.000Z",
+      "descarga_mbps": 48,
+      "latencia_ms": 44,
+      "jitter_ms": 6,
+      "perdida_pct": 0,
+      "muestras": 1,
+      "piso": 1,
+      "puntos": [
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 48,
+          "latencia_ms": 44,
+          "jitter_ms": 6,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 53
+        }
+      ],
+      "indice": 53,
+      "bytes_descargados": 3145728
+    },
+    {
+      "cuarto": "Dormitorio principal (piso 2)",
+      "es_referencia": false,
+      "timestamp": "2026-09-11T18:00:00.000Z",
+      "descarga_mbps": 10.5,
+      "latencia_ms": 113,
+      "jitter_ms": 48,
+      "perdida_pct": 0,
+      "muestras": 2,
+      "piso": 2,
+      "puntos": [
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 12,
+          "latencia_ms": 96,
+          "jitter_ms": 40,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 24
+        },
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 9,
+          "latencia_ms": 130,
+          "jitter_ms": 55,
+          "perdida_pct": 0,
+          "bytes": 3145728,
+          "indice": 15
+        }
+      ],
+      "indice": 20,
+      "bytes_descargados": 6291456
+    },
+    {
+      "cuarto": "Terraza (piso 2)",
+      "es_referencia": false,
+      "timestamp": "2026-09-11T18:00:00.000Z",
+      "descarga_mbps": 0,
+      "latencia_ms": 0,
+      "jitter_ms": 0,
+      "perdida_pct": 100,
+      "muestras": 1,
+      "piso": 2,
+      "puntos": [
+        {
+          "timestamp": "2026-09-11T18:00:00.000Z",
+          "descarga_mbps": 0,
+          "latencia_ms": 0,
+          "jitter_ms": 6,
+          "perdida_pct": 100,
+          "bytes": 3145728,
+          "error": "sin_señal",
+          "indice": 0
+        }
+      ],
+      "indice": 0,
+      "error": "sin_señal",
+      "bytes_descargados": 3145728
+    }
+  ]
+}

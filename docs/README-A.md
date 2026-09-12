@@ -116,3 +116,13 @@ En `src/App.tsx`, cambiar una línea:
 
 Mismas props: `onTerminar(resultado: ResultadoMedicion)`. `FlujoMedicion` no
 recibe el contexto del onboarding ni ve el reporte.
+
+## Modo caminata y mapa de cobertura
+
+El flujo del día 1 (`FlujoMedicion`) sigue en pie como respaldo, pero la app
+ahora usa `FlujoCaminata`: piso + habitación, varios puntos por cuarto, semáforo
+en vivo con pings de 3 bytes y mapa de calor al final.
+
+Todo está documentado en **`docs/README-MAPA.md`**, incluida la respuesta corta
+a "¿y el RSSI en dBm?": no existe API de navegador que lo entregue, así que el
+color sale de un índice 0-100 medido contra la referencia junto al router.

@@ -1,0 +1,355 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Dispositivo, MuestraRecorrido, Punto, ResultadoMedicion } from '../contrato'
+import { filasDeMediciones } from '../mapa/filas'
+import { ArbolCobertura } from '../mapa/ArbolCobertura'
+import { Boton } from '../ui/Boton'
+import { Pantalla } from '../ui/Pantalla'
+import { type Parada, clave, consolidar, etiquetaDeCuarto, megasGastadas } from './caminata'
+import { limpiar } from './cuartos'
+import { detectarDispositivo, sabeDistinguirConexion } from './dispositivo'
+import {
+  AHORRO,
+  NORMAL,
+  PUNTO,
+  PUNTO_AHORRO,
+  type Opciones,
+  type Progreso,
+  medirCuarto,
+} from './medir'
+import { IndicadorSenal } from './partes/IndicadorSenal'
+import { Medidor } from './partes/Medidor'
+import { PasoConexion } from './partes/PasoConexion'
+import { SelectorUbicacion } from './partes/SelectorUbicacion'
+import { indiceEnVivo } from './senal'
+import { iniciarSonda } from './sonda'
+import { useWakeLock } from './useWakeLock'
+
+type Paso = 'conexion' | 'referencia' | 'caminata' | 'midiendo'
+
+/** Referencia + al menos otra habitación: con una sola no hay nada que comparar. */
+const MINIMO_HABITACIONES = 2
+const MS_ENTRE_PINGS = 2000
+/** Cuántos pings recientes pesan en el semáforo. 6 ≈ los últimos 12 segundos. */
+const VENTANA_VIVO = 6
+const MAX_RECORRIDO = 600
+
+/**
+ * Modo caminata: el usuario recorre su casa, el semáforo se mueve en vivo con
+ * pings de 3 bytes, y en cada sitio pulsa «Tomar punto aquí» para fijar un
+ * número medido de verdad. Varios puntos por habitación = resultado más fiable.
+ *
+ * Frontera igual que el día 1: no recibe el contexto del onboarding ni ve el
+ * reporte. Entrega dispositivo + mediciones (+ recorrido) y C arma la Sesion.
+ */
+export function FlujoCaminata({
+  onTerminar,
+}: {
+  onTerminar: (resultado: ResultadoMedicion) => void
+}) {
+  const [paso, setPaso] = useState<Paso>('conexion')
+  const [dispositivo, setDispositivo] = useState<Dispositivo>(detectarDispositivo)
+  const [opciones, setOpciones] = useState<Opciones>(NORMAL)
+  const [piso, setPiso] = useState(1)
+  const [cuarto, setCuarto] = useState('Sala')
+  const [paradas, setParadas] = useState<Parada[]>([])
+  const [recorrido, setRecorrido] = useState<MuestraRecorrido[]>([])
+  const [ultimas, setUltimas] = useState<(number | null)[]>([])
+  const [progreso, setProgreso] = useState<Progreso | null>(null)
+  const [midiendoEtiqueta, setMidiendoEtiqueta] = useState('')
+  const [avisoCache, setAvisoCache] = useState(false)
+  const [bytes, setBytes] = useState(0)
+
+  const cancelar = useRef<AbortController | null>(null)
+  const wakeLock = useWakeLock(paso === 'caminata' || paso === 'midiendo')
+
+  // La ubicación actual vive en un ref para que la sonda, que corre en su propio
+  // bucle, etiquete cada ping con el cuarto donde el usuario está AHORA sin
+  // tener que reiniciarse en cada cambio de cuarto.
+  const ubicacion = useRef({ piso, cuarto })
+  useEffect(() => {
+    ubicacion.current = { piso, cuarto }
+  }, [piso, cuarto])
+
+  const referencia = paradas.find((p) => p.es_referencia) ?? null
+  const latenciaReferencia = useMemo(() => {
+    const puntos = referencia?.puntos.filter((p) => p.error === undefined) ?? []
+    if (puntos.length === 0) return null
+    return puntos.reduce((a, p) => a + p.latencia_ms, 0) / puntos.length
+  }, [referencia])
+
+  const indiceVivo = indiceEnVivo(ultimas.slice(-VENTANA_VIVO), latenciaReferencia)
+  const mediciones = useMemo(() => consolidar(paradas), [paradas])
+  const filas = useMemo(() => filasDeMediciones(mediciones), [mediciones])
+
+  /* La sonda solo corre mientras se camina: durante una medición competiría con
+     la descarga y ensuciaría las dos cosas. */
+  useEffect(() => {
+    if (paso !== 'caminata') return
+    const sonda = iniciarSonda(MS_ENTRE_PINGS, (ms) => {
+      setUltimas((prev) => [...prev, ms].slice(-24))
+      setRecorrido((prev) =>
+        [
+          ...prev,
+          {
+            t: new Date().toISOString(),
+            cuarto: ubicacion.current.cuarto,
+            piso: ubicacion.current.piso,
+            latencia_ms: ms,
+          },
+        ].slice(-MAX_RECORRIDO),
+      )
+    })
+    return () => sonda.detener()
+  }, [paso])
+
+  useEffect(() => () => cancelar.current?.abort(), [])
+
+  const tomarPunto = useCallback(
+    async (esReferencia: boolean) => {
+      const nombre = limpiar(cuarto)
+      if (nombre.length < 2) return
+
+      const etiqueta = etiquetaDeCuarto(piso, nombre, esReferencia)
+      const ctrl = new AbortController()
+      cancelar.current = ctrl
+
+      setMidiendoEtiqueta(etiqueta)
+      setProgreso(null)
+      setPaso('midiendo')
+
+      const opcionesPunto = esReferencia
+        ? opciones
+        : opciones === AHORRO
+          ? PUNTO_AHORRO
+          : PUNTO
+
+      try {
+        const { medicion, desdeCache } = await medirCuarto(
+          etiqueta,
+          esReferencia,
+          opcionesPunto,
+          setProgreso,
+          ctrl.signal,
+        )
+        if (ctrl.signal.aborted) return
+
+        const punto: Punto = {
+          timestamp: medicion.timestamp,
+          descarga_mbps: medicion.descarga_mbps,
+          latencia_ms: medicion.latencia_ms,
+          jitter_ms: medicion.jitter_ms,
+          perdida_pct: medicion.perdida_pct,
+          bytes: medicion.bytes_descargados,
+          ...(medicion.error === undefined ? {} : { error: medicion.error }),
+        }
+
+        setAvisoCache(desdeCache)
+        setBytes((b) => b + (medicion.bytes_descargados ?? 0))
+        setParadas((prev) => agregarPunto(prev, piso, nombre, esReferencia, punto))
+        setDispositivo((d) => ({ ...d, ...datosDeRedFrescos() }))
+        setPaso('caminata')
+      } catch {
+        if (!ctrl.signal.aborted) setPaso(esReferencia ? 'referencia' : 'caminata')
+      } finally {
+        cancelar.current = null
+        setProgreso(null)
+      }
+    },
+    [cuarto, opciones, piso],
+  )
+
+  function cancelarMedicion() {
+    cancelar.current?.abort()
+    cancelar.current = null
+    setProgreso(null)
+    setPaso(referencia === null ? 'referencia' : 'caminata')
+  }
+
+  /* ─────────────── 1. wifi o datos móviles ─────────────── */
+
+  if (paso === 'conexion') {
+    return (
+      <PasoConexion
+        dispositivo={dispositivo}
+        detectaConexion={sabeDistinguirConexion()}
+        onRevisar={() => setDispositivo(detectarDispositivo())}
+        onConfirmarWifi={() => {
+          setDispositivo((d) => ({ ...d, conexion_confirmada: true }))
+          setPaso('referencia')
+        }}
+        onSeguirEnAhorro={() => {
+          setOpciones(AHORRO)
+          setPaso('referencia')
+        }}
+      />
+    )
+  }
+
+  /* ─────────────── 2. la referencia, junto al router ─────────────── */
+
+  if (paso === 'referencia') {
+    return (
+      <Pantalla
+        paso={2}
+        titulo="Empecemos junto al router"
+        bajada="Esta primera medición es la referencia: lo mejor que tu casa puede dar. Todo lo que midas después se compara contra ella."
+        pie={<Boton onClick={() => void tomarPunto(true)}>Medir aquí, junto al router</Boton>}
+      >
+        <div className="rounded-2xl border border-win-200 bg-win-100/70 p-4 text-sm leading-snug text-win-900">
+          Sin esta medición no podemos separar dos problemas distintos: que tu internet venga lento
+          desde la calle, o que tu wifi no llegue bien a un cuarto. Son soluciones muy diferentes.
+        </div>
+
+        <p className="mt-6 mb-3 font-semibold text-win-900">¿Dónde está el router?</p>
+        <SelectorUbicacion
+          piso={piso}
+          cuarto={cuarto}
+          puntosPorCuarto={{}}
+          onCambiarPiso={setPiso}
+          onCambiarCuarto={setCuarto}
+        />
+
+        {opciones === AHORRO && (
+          <p className="mt-4 text-sm text-gray-600">
+            Modo ahorro activado: cada punto usará ~1.5 MB en vez de 3 MB.
+          </p>
+        )}
+      </Pantalla>
+    )
+  }
+
+  /* ─────────────── 3. midiendo un punto ─────────────── */
+
+  if (paso === 'midiendo') {
+    return (
+      <Medidor
+        cuarto={midiendoEtiqueta}
+        progreso={progreso}
+        pantallaEncendida={wakeLock === 'activo'}
+        onCancelar={cancelarMedicion}
+      />
+    )
+  }
+
+  /* ─────────────── 4. la caminata ─────────────── */
+
+  const nombreLimpio = limpiar(cuarto)
+  const puedeMedir = nombreLimpio.length >= 2
+  const habitaciones = paradas.length
+  const listo = habitaciones >= MINIMO_HABITACIONES
+
+  const puntosPorCuarto: Record<string, number> = {}
+  for (const p of paradas) puntosPorCuarto[clave(p.piso, p.cuarto)] = p.puntos.length
+
+  const puntosAqui = puntosPorCuarto[clave(piso, nombreLimpio)] ?? 0
+
+  return (
+    <Pantalla
+      paso={2}
+      titulo="Camina por tu casa"
+      bajada="Marca dónde estás y toma un punto. Mientras caminas, el semáforo de arriba se mueve solo."
+      pie={
+        <>
+          <Boton disabled={!puedeMedir} onClick={() => void tomarPunto(false)}>
+            {puedeMedir
+              ? `Tomar punto aquí${puntosAqui > 0 ? ` (${puntosAqui + 1}º en ${nombreLimpio})` : ''}`
+              : 'Elige dónde estás'}
+          </Boton>
+          <Boton
+            variante={listo ? 'secundario' : 'texto'}
+            disabled={!listo}
+            onClick={() => onTerminar({ dispositivo, mediciones, recorrido })}
+          >
+            {listo
+              ? `Terminar y ver mi mapa (${habitaciones} habitaciones)`
+              : `Mide al menos ${MINIMO_HABITACIONES} habitaciones`}
+          </Boton>
+        </>
+      }
+    >
+      <IndicadorSenal
+        indice={indiceVivo}
+        ubicacion={`${nombreLimpio === '' ? 'Sin marcar' : nombreLimpio} · Piso ${piso}`}
+        latencia={ultimas.at(-1) ?? null}
+        ultimas={ultimas}
+      />
+
+      {avisoCache && (
+        <p className="mt-4 rounded-xl bg-malo-bg p-3 text-sm text-malo">
+          El último punto salió del caché del navegador, así que ese número no es real. Tómalo de
+          nuevo.
+        </p>
+      )}
+
+      {wakeLock === 'no_disponible' && (
+        <p className="mt-4 text-sm text-gray-500">
+          Tu navegador no deja mantener la pantalla encendida. Si se apaga, la medición se pausa.
+        </p>
+      )}
+
+      <p className="mt-7 mb-3 font-semibold text-win-900">¿Dónde estás ahora?</p>
+      <SelectorUbicacion
+        piso={piso}
+        cuarto={cuarto}
+        puntosPorCuarto={puntosPorCuarto}
+        onCambiarPiso={setPiso}
+        onCambiarCuarto={setCuarto}
+      />
+
+      {filas.length > 0 && (
+        <div className="mt-8">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-lg font-bold text-win-900">Tu mapa hasta ahora</h2>
+            <span className="text-xs text-gray-500">{megasGastadas(bytes)} MB usados</span>
+          </div>
+          <ArbolCobertura filas={filas} />
+          <Boton
+            variante="texto"
+            onClick={() => setParadas((prev) => quitarUltimoPunto(prev, piso, nombreLimpio))}
+            disabled={puntosAqui === 0}
+          >
+            Borrar el último punto de {nombreLimpio === '' ? 'este cuarto' : nombreLimpio}
+          </Boton>
+        </div>
+      )}
+    </Pantalla>
+  )
+}
+
+/* ─────────────── helpers ─────────────── */
+
+function agregarPunto(
+  paradas: Parada[],
+  piso: number,
+  cuarto: string,
+  esReferencia: boolean,
+  punto: Punto,
+): Parada[] {
+  const k = clave(piso, cuarto)
+  const i = paradas.findIndex((p) => clave(p.piso, p.cuarto) === k)
+  if (i === -1) return [...paradas, { piso, cuarto, es_referencia: esReferencia, puntos: [punto] }]
+
+  const copia = [...paradas]
+  copia[i] = { ...copia[i], puntos: [...copia[i].puntos, punto] }
+  return copia
+}
+
+function quitarUltimoPunto(paradas: Parada[], piso: number, cuarto: string): Parada[] {
+  const k = clave(piso, cuarto)
+  return paradas
+    .map((p) => (clave(p.piso, p.cuarto) === k ? { ...p, puntos: p.puntos.slice(0, -1) } : p))
+    .filter((p) => p.puntos.length > 0)
+}
+
+/** navigator.connection cambia durante la caminata; nos quedamos con lo último. */
+function datosDeRedFrescos(): Partial<Dispositivo> {
+  const d = detectarDispositivo()
+  const fresco: Partial<Dispositivo> = {
+    effective_type: d.effective_type,
+    downlink_mbps: d.downlink_mbps,
+    rtt_ms: d.rtt_ms,
+    ahorro_datos: d.ahorro_datos,
+  }
+  if (sabeDistinguirConexion()) fresco.conexion = d.conexion
+  return fresco
+}
